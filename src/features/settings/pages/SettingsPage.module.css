@@ -1,0 +1,297 @@
+/* ── Page ────────────────────────────────────────────────── */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 28px 32px;
+  max-width: 700px;
+}
+
+.heading {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.subtitle {
+  margin: -14px 0 0;
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+/* ── Section ─────────────────────────────────────────────── */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.sectionDesc {
+  margin: -4px 0 0;
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+}
+
+/* ── Theme cards ─────────────────────────────────────────── */
+.themeCards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.themeCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 10px 12px;
+  border: 2px solid var(--color-border-subtle);
+  border-radius: 10px;
+  background-color: var(--color-bg-elevated);
+  cursor: pointer;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.12s ease;
+  font-family: inherit;
+  text-align: center;
+}
+
+.themeCard:hover {
+  border-color: #9ca3af;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transform: translateY(-1px);
+}
+
+.themeCardActive {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.themeCardActive:hover {
+  border-color: #6366f1;
+}
+
+/* ── Mini preview ────────────────────────────────────────── */
+.themePreview {
+  display: flex;
+  width: 100%;
+  height: 56px;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--color-border-subtle);
+}
+
+.themePreview[data-preview="light"] .previewSidebar {
+  background-color: #1f2937;
+}
+.themePreview[data-preview="light"] .previewMain {
+  background-color: #f9fafb;
+}
+.themePreview[data-preview="light"] .previewHeader {
+  background-color: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+}
+.themePreview[data-preview="light"] .previewLine,
+.themePreview[data-preview="light"] .previewLineShort {
+  background-color: #d1d5db;
+}
+
+.themePreview[data-preview="dark"] .previewSidebar {
+  background-color: #0f1117;
+}
+.themePreview[data-preview="dark"] .previewMain {
+  background-color: #1a1d28;
+}
+.themePreview[data-preview="dark"] .previewHeader {
+  background-color: #22252f;
+  border-bottom: 1px solid #2d3140;
+}
+.themePreview[data-preview="dark"] .previewLine,
+.themePreview[data-preview="dark"] .previewLineShort {
+  background-color: #3b3f4e;
+}
+
+.themePreview[data-preview="system"] .previewSidebar {
+  background: linear-gradient(180deg, #1f2937 50%, #0f1117 50%);
+}
+.themePreview[data-preview="system"] .previewMain {
+  background: linear-gradient(180deg, #f9fafb 50%, #1a1d28 50%);
+}
+.themePreview[data-preview="system"] .previewHeader {
+  background: linear-gradient(180deg, #ffffff 50%, #22252f 50%);
+  border-bottom: 1px solid #d1d5db;
+}
+.themePreview[data-preview="system"] .previewLine,
+.themePreview[data-preview="system"] .previewLineShort {
+  background: linear-gradient(180deg, #d1d5db 50%, #3b3f4e 50%);
+}
+
+.previewSidebar {
+  width: 28%;
+  flex-shrink: 0;
+}
+
+.previewMain {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.previewHeader {
+  height: 12px;
+}
+
+.previewContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 8px;
+}
+
+.previewLine {
+  height: 4px;
+  border-radius: 2px;
+  width: 80%;
+}
+
+.previewLineShort {
+  height: 4px;
+  border-radius: 2px;
+  width: 50%;
+}
+
+/* ── Labels ──────────────────────────────────────────────── */
+.themeLabel {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.themeDesc {
+  font-size: 0.6875rem;
+  color: var(--color-text-muted);
+  line-height: 1.35;
+}
+
+/* ── Active badge ────────────────────────────────────────── */
+.checkBadge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background-color: #6366f1;
+  color: #ffffff;
+  animation: badgePop 0.25s ease-out;
+}
+
+@keyframes badgePop {
+  0%   { transform: scale(0); opacity: 0; }
+  60%  { transform: scale(1.15); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 560px) {
+  .themeCards {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Setting rows ────────────────────────────────────────── */
+.settingRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-md) var(--spacing-lg);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 8px;
+  background-color: var(--color-bg-elevated);
+}
+
+.settingInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.settingLabel {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.settingHint {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.settingSelect {
+  padding: 6px 10px;
+  font-size: 0.8125rem;
+  font-family: inherit;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 6px;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  cursor: pointer;
+  min-width: 140px;
+}
+
+/* ── Toggle switch ───────────────────────────────────────── */
+
+.toggle {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  background-color: var(--color-border-subtle, #3b3f4e);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  outline: none;
+}
+
+.toggle:focus-visible {
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.35);
+}
+
+.toggle:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.toggleOn {
+  background-color: #6366f1;
+}
+
+.toggleThumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-color: #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.toggleOn .toggleThumb {
+  transform: translateX(20px);
+}
