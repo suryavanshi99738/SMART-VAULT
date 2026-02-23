@@ -118,6 +118,11 @@ pub fn estimate_password_strength(password: String) -> Result<StrengthResult, St
 /// Called by the frontend after a configurable delay.
 #[tauri::command]
 pub fn clear_clipboard() -> Result<bool, String> {
+    clear_clipboard_sync()
+}
+
+/// Non-command variant callable from Rust (e.g. tray exit handler).
+pub fn clear_clipboard_sync() -> Result<bool, String> {
     // Use the Windows clipboard API via a small inline routine.
     // This avoids adding a clipboard crate dependency.
     #[cfg(target_os = "windows")]

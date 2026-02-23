@@ -18,6 +18,25 @@ export interface AppSettings {
    * the result so the user's stored preference is always respected.
    */
   enable_animations: boolean;
+  /** Minimise motion — replaces slide/scale with fade-only transitions */
+  reduced_motion: boolean;
+  /** Skip unlock transition entirely for fastest vault access */
+  instant_unlock: boolean;
+  // ── Window & tray ──────────────────────────────────────────────────────────
+  /** Hide to tray instead of quitting when the window close button is clicked */
+  close_to_tray: boolean;
+  /** Restore last window position/size on relaunch */
+  restore_window_state: boolean;
+  // ── Global shortcut ────────────────────────────────────────────────────────
+  /** Whether the global keyboard shortcut is active */
+  global_shortcut_enabled: boolean;
+  /** Accelerator string, e.g. "Ctrl+Shift+V" */
+  global_shortcut: string;
+  // ── Backup ─────────────────────────────────────────────────────────────────
+  /** ISO-8601 timestamp of the last successful backup export */
+  last_backup_date: string | null;
+  /** Periodically remind the user to back up the vault */
+  backup_reminder: boolean;
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -28,4 +47,12 @@ export const DEFAULT_SETTINGS: AppSettings = {
   compact_mode: false,
   // Will be overridden at load-time if OS reports prefers-reduced-motion
   enable_animations: true,
+  reduced_motion: false,
+  instant_unlock: false,
+  close_to_tray: false,
+  restore_window_state: false,
+  global_shortcut_enabled: true,
+  global_shortcut: "Ctrl+Shift+V",
+  last_backup_date: null,
+  backup_reminder: false,
 };

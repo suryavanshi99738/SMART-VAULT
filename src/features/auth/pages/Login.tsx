@@ -30,6 +30,8 @@ interface LoginFormState {
   authMode: AuthMode;
   remainingAttempts: number;
   lockoutSeconds: number;
+  /** Trigger CSS micro-shake animation on error */
+  shakeError: boolean;
 }
 
 interface LoginProps {
@@ -121,7 +123,16 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
     authMode: "loading",
     remainingAttempts: 5,
     lockoutSeconds: 0,
+    shakeError: false,
   });
+
+  /** Trigger a micro-shake, then auto-clear */
+  const triggerShake = () => {
+    setFormState((prev) => ({ ...prev, shakeError: true }));
+    setTimeout(() => {
+      setFormState((prev) => ({ ...prev, shakeError: false }));
+    }, 280);
+  };
 
   // Check whether a master password already exists on mount
   useEffect(() => {
@@ -205,6 +216,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
             isLoading: false,
             errorMessage: "Setup succeeded but vault could not be unlocked. Please restart.",
           }));
+          triggerShake();
         }
       } else {
         // Returning user: verify + derive key in a single atomic call
@@ -222,6 +234,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
             lockoutSeconds: result.lockout_seconds,
             errorMessage: `Too many failed attempts. Try again in ${result.lockout_seconds} seconds.`,
           }));
+          triggerShake();
         } else {
           setFormState((prev) => ({
             ...prev,
@@ -232,6 +245,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                 ? `Incorrect master password. ${result.remaining_attempts} attempt${result.remaining_attempts === 1 ? "" : "s"} remaining.`
                 : "Incorrect master password.",
           }));
+          triggerShake();
         }
       }
     } catch (err: unknown) {
@@ -246,12 +260,16 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
         isLoading: false,
         errorMessage: message,
       }));
+      triggerShake();
     }
   };
 
   return (
     <div className={styles.page}>
-      <div className={styles.card} role="main">
+      <div
+        className={`${styles.card} ${formState.shakeError ? styles.cardShake : ""}`}
+        role="main"
+      >
 
         {/* Brand */}
         <div className={styles.brand}>
@@ -284,6 +302,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                 placeholder="e.g. Alex"
                 autoComplete="nickname"
                 autoFocus
+                disabled={formState.isLoading}
                 aria-describedby="password-error"
                 aria-invalid={formState.errorMessage.length > 0}
               />
@@ -299,11 +318,12 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
               <input
                 id="master-password"
                 type={formState.showPassword ? "text" : "password"}
-                className={styles.input}
+                className={`${styles.input} ${formState.errorMessage ? styles.inputError : ""}`}
                 value={formState.password}
                 onChange={handlePasswordChange}
                 placeholder="Enter your master password"
                 autoComplete="current-password"
+                disabled={formState.isLoading}
                 aria-describedby="password-error"
                 aria-invalid={formState.errorMessage.length > 0}
               />
@@ -345,20 +365,24 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
           {/* Submit Button */}
           <button
             type="submit"
-            className={styles.loginButton}
+            className={`${styles.loginButton} ${formState.isLoading ? styles.loginButtonLoading : ""}`}
             disabled={isNameEmpty || isPasswordEmpty || formState.isLoading}
             aria-busy={formState.isLoading}
           >
             {formState.isLoading && (
               <span className={styles.spinner} aria-hidden="true" />
             )}
-            {formState.isLoading
-              ? formState.authMode === "setup"
-                ? "Setting up…"
-                : "Unlocking…"
-              : formState.authMode === "setup"
-                ? "Create & Enter"
-                : "Unlock Vault"}
+            <span
+              className={styles.buttonLabel}
+              style={{ opacity: formState.isLoading ? 0 : 1 }}
+            >
+              {formState.authMode === "setup" ? "Create & Enter" : "Unlock Vault"}
+            </span>
+            {formState.isLoading && (
+              <span className={styles.buttonLabelLoading}>
+                {formState.authMode === "setup" ? "Setting up\u2026" : "Verifying\u2026"}
+              </span>
+            )}
           </button>
 
         </form>

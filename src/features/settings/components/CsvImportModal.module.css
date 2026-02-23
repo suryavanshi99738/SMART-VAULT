@@ -1,0 +1,237 @@
+/* src/features/settings/components/CsvImportModal.module.css */
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: csvFadeIn var(--anim-duration-fast) ease-out;
+}
+
+@keyframes csvFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.modal {
+  width: min(96vw, 640px);
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px;
+  background-color: var(--color-bg-elevated);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  animation: csvSlideUp var(--anim-duration-normal) cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes csvSlideUp {
+  from { opacity: 0; transform: translateY(12px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);    }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.closeBtn {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color var(--anim-duration-fast) ease;
+}
+.closeBtn:hover {
+  background-color: var(--color-bg-hover);
+}
+
+/* ── Drop zone ──────────────────────────────────────────── */
+.dropZone {
+  margin: 16px 20px;
+  padding: 32px 16px;
+  border: 2px dashed var(--color-border-subtle);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: border-color var(--anim-duration-fast) ease,
+              background-color var(--anim-duration-fast) ease;
+}
+.dropZone:hover,
+.dropZoneDragging {
+  border-color: #6366f1;
+  background-color: rgba(99, 102, 241, 0.06);
+}
+.dropZoneIcon {
+  color: var(--color-text-muted);
+}
+.dropZoneText {
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+.dropZoneLink {
+  color: #6366f1;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ── Info tooltip ────────────────────────────────────────── */
+.formatInfo {
+  margin: 0 20px;
+  padding: 10px 14px;
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 8px;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  line-height: 1.55;
+}
+.formatInfo code {
+  font-family: "SF Mono", "Cascadia Code", monospace;
+  font-size: 0.6875rem;
+  background: var(--color-bg-elevated);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+/* ── Preview table ──────────────────────────────────────── */
+.tableWrap {
+  overflow-y: auto;
+  flex: 1;
+  padding: 0 20px;
+  margin: 12px 0 0;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+.table th {
+  text-align: left;
+  padding: 8px 10px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  border-bottom: 1px solid var(--color-border-subtle);
+  position: sticky;
+  top: 0;
+  background-color: var(--color-bg-elevated);
+  z-index: 1;
+}
+.table td {
+  padding: 6px 10px;
+  color: var(--color-text);
+  border-bottom: 1px solid var(--color-border-subtle);
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.table tr:last-child td {
+  border-bottom: none;
+}
+
+.checkbox {
+  width: 16px;
+  height: 16px;
+  accent-color: #6366f1;
+  cursor: pointer;
+}
+
+/* ── Footer ─────────────────────────────────────────────── */
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-top: 1px solid var(--color-border-subtle);
+  gap: 12px;
+}
+
+.selectedCount {
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btnCancel {
+  padding: 7px 16px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 7px;
+  background: transparent;
+  color: var(--color-text);
+  cursor: pointer;
+  transition: background-color var(--anim-duration-fast) ease;
+}
+.btnCancel:hover {
+  background-color: var(--color-bg-hover);
+}
+
+.btnImport {
+  padding: 7px 20px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 7px;
+  background-color: #6366f1;
+  color: #fff;
+  cursor: pointer;
+  transition: background-color var(--anim-duration-fast) ease;
+}
+.btnImport:hover {
+  background-color: #4f46e5;
+}
+.btnImport:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Status messages ────────────────────────────────────── */
+.error {
+  margin: 0 20px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.success {
+  margin: 0 20px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background-color: rgba(34, 197, 94, 0.1);
+  color: #22c55e;
+  font-size: 0.8125rem;
+  font-weight: 500;
+}

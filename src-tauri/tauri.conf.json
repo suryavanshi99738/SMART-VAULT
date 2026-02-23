@@ -12,9 +12,11 @@
   "app": {
     "windows": [
       {
-        "title": "smart-vault",
+        "title": "Smart Vault",
         "width": 800,
-        "height": 600
+        "height": 600,
+        "visible": true,
+        "closable": true
       }
     ],
     "security": {

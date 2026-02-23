@@ -295,3 +295,169 @@
 .toggleOn .toggleThumb {
   transform: translateX(20px);
 }
+
+/* ── Section icon ────────────────────────────────────────── */
+.sectionIcon {
+  margin-right: 4px;
+}
+
+/* ── Status badges ───────────────────────────────────────── */
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 20px;
+  background-color: rgba(34, 197, 94, 0.12);
+  color: #22c55e;
+  white-space: nowrap;
+}
+
+.statusBadgeWarn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 20px;
+  background-color: rgba(234, 179, 8, 0.12);
+  color: #eab308;
+  white-space: nowrap;
+}
+
+/* ── Alerts ──────────────────────────────────────────────── */
+.alertSuccess {
+  padding: 10px 14px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  border-radius: 8px;
+  background-color: rgba(34, 197, 94, 0.1);
+  color: #22c55e;
+}
+
+.alertError {
+  padding: 10px 14px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  border-radius: 8px;
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+/* ── Button rows ─────────────────────────────────────────── */
+.buttonRow {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.actionBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 18px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  font-family: inherit;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 8px;
+  background-color: var(--color-bg-elevated);
+  color: var(--color-text);
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease,
+              transform 0.1s ease;
+}
+.actionBtn:hover {
+  background-color: var(--color-bg-hover);
+  border-color: #6366f1;
+  transform: translateY(-1px);
+}
+.actionBtn:active {
+  transform: translateY(0);
+}
+
+/* ── Shortcut input ──────────────────────────────────────── */
+.shortcutGroup {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.shortcutInput {
+  width: 140px;
+  padding: 6px 10px;
+  font-size: 0.8125rem;
+  font-family: "SF Mono", "Cascadia Code", monospace;
+  font-weight: 600;
+  text-align: center;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 6px;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.shortcutInput:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+.shortcutInput:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.shortcutRecording {
+  border-color: #6366f1;
+  animation: recordPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes recordPulse {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15); }
+  50%      { box-shadow: 0 0 0 5px rgba(99, 102, 241, 0.3); }
+}
+
+.resetBtn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+.resetBtn:hover:not(:disabled) {
+  background-color: var(--color-bg-hover);
+}
+.resetBtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* ── Import info box ─────────────────────────────────────── */
+.importInfo {
+  padding: 10px 14px;
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 8px;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  line-height: 1.55;
+}
+
+/* ── Code ────────────────────────────────────────────────── */
+.code {
+  font-family: "SF Mono", "Cascadia Code", monospace;
+  font-size: 0.6875rem;
+  background: var(--color-bg);
+  padding: 1px 5px;
+  border-radius: 4px;
+}

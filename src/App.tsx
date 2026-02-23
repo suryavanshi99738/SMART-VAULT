@@ -16,6 +16,10 @@ import CategoriesPage from "./features/categories/pages/CategoriesPage";
 import { useWindowLock } from "./features/settings/hooks/useWindowLock";
 import type { LockReason } from "./features/settings/hooks/useWindowLock";
 import { loadSettings, saveSettings } from "./features/settings/settingsService";
+import {
+  registerGlobalShortcut,
+  unregisterGlobalShortcut,
+} from "./features/settings/shortcutService";
 import type { AppSettings } from "./features/settings/types/settings.types";
 import { DEFAULT_SETTINGS } from "./features/settings/types/settings.types";
 import { ToastContainer, useToast } from "./shared/components/Toast";
@@ -23,7 +27,14 @@ import type { SectionId } from "./app/layout/Sidebar";
 
 type AppView = "login" | "transitioning" | "app";
 
-const TRANSITION_DURATION = 1600; // ms
+/**
+ * Unlock transition duration (ms).
+ * - Animations ON: clean cross-fade (~380ms)
+ * - Reduced motion: opacity-only fade (~180ms)
+ * - Instant unlock: 0ms
+ */
+const TRANSITION_MS = 380;
+const TRANSITION_REDUCED_MS = 180;
 
 const AppInner: React.FC = () => {
   const [view, setView] = useState<AppView>("login");
@@ -118,6 +129,34 @@ const AppInner: React.FC = () => {
     onLocked: handleAutoLock,
   });
 
+  // ── Tray "Lock Vault" event ───────────────────────────────────────────────
+  useEffect(() => {
+    let unlisten: (() => void) | undefined;
+    (async () => {
+      try {
+        const { listen } = await import("@tauri-apps/api/event");
+        unlisten = await listen("vault-locked-from-tray", () => {
+          handleLock();
+        });
+      } catch {
+        /* not in Tauri env */
+      }
+    })();
+    return () => unlisten?.();
+  }, [handleLock]);
+
+  // ── Global shortcut registration ──────────────────────────────────────────
+  useEffect(() => {
+    if (settings.global_shortcut_enabled && settings.global_shortcut) {
+      registerGlobalShortcut(settings.global_shortcut).catch(() => {
+        /* non-fatal */
+      });
+    }
+    return () => {
+      unregisterGlobalShortcut().catch(() => {});
+    };
+  }, [settings.global_shortcut_enabled, settings.global_shortcut]);
+
   // Alt+L keyboard shortcut to lock the vault
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -135,18 +174,23 @@ const AppInner: React.FC = () => {
       setUserName(name);
       masterPasswordRef.current = masterPassword;
       // Vault is already unlocked by Login.tsx via unlock_vault command.
-      // Just trigger the transition animation.
-      setView("transitioning");
+      if (settings.instant_unlock || !settings.enable_animations) {
+        // Skip transition entirely
+        setView("app");
+      } else {
+        setView("transitioning");
+      }
     },
-    []
+    [settings.instant_unlock, settings.enable_animations]
   );
 
   // After the transition animation finishes, switch to app
   useEffect(() => {
     if (view !== "transitioning") return;
-    const timer = setTimeout(() => setView("app"), TRANSITION_DURATION);
+    const duration = settings.reduced_motion ? TRANSITION_REDUCED_MS : TRANSITION_MS;
+    const timer = setTimeout(() => setView("app"), duration);
     return () => clearTimeout(timer);
-  }, [view]);
+  }, [view, settings.reduced_motion]);
 
   // ── Render ────────────────────────────────────────────────────────────────
 
@@ -163,6 +207,7 @@ const AppInner: React.FC = () => {
           <SettingsPage
             settings={settings}
             onSettingsChange={handleSettingsChange}
+            masterPassword={masterPasswordRef.current}
           />
         );
       default:
@@ -187,26 +232,28 @@ const AppInner: React.FC = () => {
       )}
 
       {view === "transitioning" && (
-        <div className="transition-overlay">
-          <div className="transition-lock">
+        <div
+          className={`unlock-transition ${settings.reduced_motion ? "unlock-transition--reduced" : ""}`}
+          aria-live="polite"
+          aria-label="Unlocking vault"
+        >
+          <div className="unlock-transition__card">
             <svg
-              className="transition-lock-icon"
-              width="48"
-              height="48"
+              className="unlock-transition__icon"
               viewBox="0 0 24 24"
+              width="28"
+              height="28"
               fill="none"
               stroke="currentColor"
-              strokeWidth="1.5"
+              strokeWidth="1.6"
               strokeLinecap="round"
               strokeLinejoin="round"
+              aria-hidden="true"
             >
               <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              <path className="unlock-transition__shackle" d="M7 11V7a5 5 0 0 1 10 0v4" />
             </svg>
-          </div>
-          <p className="transition-text">Unlocking your vault…</p>
-          <div className="transition-bar-track">
-            <div className="transition-bar-fill" />
+            <p className="unlock-transition__text">Smart Vault</p>
           </div>
         </div>
       )}

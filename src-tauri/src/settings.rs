@@ -44,11 +44,51 @@ pub struct AppSettings {
     /// reports `prefers-reduced-motion` and no user preference is saved yet.
     #[serde(default = "default_enable_animations")]
     pub enable_animations: bool,
+
+    /// Minimise motion for accessibility — replaces slide/scale with opacity-only.
+    #[serde(default)]
+    pub reduced_motion: bool,
+
+    /// Skip the unlock transition entirely for fastest vault access.
+    #[serde(default)]
+    pub instant_unlock: bool,
+
+    // ── Window & tray behaviour ────────────────────────────────────────────
+
+    /// Intercept the window close button and hide to tray instead.
+    #[serde(default)]
+    pub close_to_tray: bool,
+
+    /// Restore the last window position/size on relaunch.
+    #[serde(default)]
+    pub restore_window_state: bool,
+
+    // ── Global shortcut ────────────────────────────────────────────────────
+
+    /// Whether the global shortcut is active.
+    #[serde(default = "default_true")]
+    pub global_shortcut_enabled: bool,
+
+    /// Accelerator string, e.g. "Ctrl+Shift+V".
+    #[serde(default = "default_shortcut")]
+    pub global_shortcut: String,
+
+    // ── Backup ─────────────────────────────────────────────────────────────
+
+    /// ISO-8601 timestamp of the last successful export, if any.
+    #[serde(default)]
+    pub last_backup_date: Option<String>,
+
+    /// Periodically remind the user to back up the vault.
+    #[serde(default)]
+    pub backup_reminder: bool,
 }
 
 fn default_auto_lock_minutes() -> u32 { 5 }
 fn default_clipboard_clear_seconds() -> u32 { 15 }
 fn default_enable_animations() -> bool { true }
+fn default_true() -> bool { true }
+fn default_shortcut() -> String { "Ctrl+Shift+V".to_string() }
 
 impl Default for AppSettings {
     fn default() -> Self {
@@ -59,6 +99,14 @@ impl Default for AppSettings {
             clipboard_clear_seconds: default_clipboard_clear_seconds(),
             compact_mode: false,
             enable_animations: default_enable_animations(),
+            reduced_motion: false,
+            instant_unlock: false,
+            close_to_tray: false,
+            restore_window_state: false,
+            global_shortcut_enabled: true,
+            global_shortcut: default_shortcut(),
+            last_backup_date: None,
+            backup_reminder: false,
         }
     }
 }

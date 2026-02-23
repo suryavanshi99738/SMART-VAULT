@@ -21,6 +21,18 @@
   transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
+/* Micro-shake on error — 2-3px only, 120ms */
+.cardShake {
+  animation: micro-shake 120ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes micro-shake {
+  0%, 100% { transform: translateX(0); }
+  25%      { transform: translateX(-2px); }
+  50%      { transform: translateX(2px); }
+  75%      { transform: translateX(-2px); }
+}
+
 :global([data-theme="dark"]) .card {
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.2);
 }
@@ -188,6 +200,12 @@
   gap: 5px;
   font-size: 0.8rem;
   color: #ef4444;
+  animation: errorFadeIn 150ms ease-out;
+}
+
+@keyframes errorFadeIn {
+  from { opacity: 0; transform: translateY(-2px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 :global([data-theme="dark"]) .errorText {
@@ -219,6 +237,7 @@
 
 /* ── Login Button ────────────────────────────────────────── */
 .loginButton {
+  position: relative;
   width: 100%;
   padding: 11px 0;
   font-size: 0.9375rem;
@@ -236,6 +255,7 @@
   justify-content: center;
   gap: 8px;
   box-shadow: 0 1px 3px rgba(99, 102, 241, 0.3);
+  overflow: hidden;
 }
 
 .loginButton:hover:not(:disabled) {
@@ -252,6 +272,46 @@
   opacity: 0.4;
   cursor: not-allowed;
   box-shadow: none;
+}
+
+/* Button loading state: subtle opacity + shimmer */
+.loginButtonLoading {
+  opacity: 0.9;
+  pointer-events: none;
+}
+.loginButtonLoading::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.06) 40%,
+    rgba(255, 255, 255, 0.06) 60%,
+    transparent 100%
+  );
+  animation: buttonShimmer 1.6s ease-in-out infinite;
+}
+
+@keyframes buttonShimmer {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* Label transitions for submit button */
+.buttonLabel {
+  transition: opacity 150ms ease;
+}
+.buttonLabelLoading {
+  position: absolute;
+  left: 0;
+  right: 0;
+  text-align: center;
+  animation: labelFadeIn 150ms ease-out;
+}
+@keyframes labelFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 /* ── Spinner ─────────────────────────────────────────────── */
