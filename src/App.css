@@ -11,20 +11,22 @@
   color-scheme: light;
 
   /* ── Colour tokens ────────────────────────────────────── */
-  --color-bg: #f4f5f7;
-  --color-bg-elevated: #ffffff;
-  --color-border-subtle: #e5e7eb;
-  --color-text: #111827;
-  --color-text-muted: #6b7280;
-  --color-sidebar-bg: #111827;
-  --color-sidebar-border: #1f2933;
-  --color-sidebar-text: #e5e7eb;
-  --color-sidebar-text-muted: #9ca3af;
-  --color-accent: #4b5563;
-  --color-accent-soft: #374151;
-  --color-content-gradient-1: #f9fafb;
-  --color-content-gradient-2: #f4f5f7;
-  --color-content-gradient-3: #eef0f4;
+  --bg-primary: #ffffff;
+  --bg-secondary: #f3f4f6;
+  --bg-tertiary: #e5e7eb;
+  --bg-hover: #e5e7eb;
+  --border-default: #d1d5db;
+  --text-primary: #111827;
+  --text-secondary: #374151;
+  --text-muted: #6b7280;
+  --primary-default: #84cc16;
+  --primary-hover: #65a30d;
+  --primary-ring: rgba(132, 204, 22, 0.2);
+  --primary-subtle: rgba(132, 204, 22, 0.08);
+  --color-danger: #c86565;
+  --color-warning: #c5c86b;
+  --color-success: #69c36b;
+  --color-info: #8c8cd6;
 
   /* ── Spacing tokens ───────────────────────────────────── */
   /* Consumed by layout rules and component CSS modules.    */
@@ -52,20 +54,18 @@
 
 [data-theme="dark"] {
   color-scheme: dark;
-  --color-bg: #0f1117;
-  --color-bg-elevated: #1a1d28;
-  --color-border-subtle: #2d3140;
-  --color-text: #e5e7eb;
-  --color-text-muted: #9ca3af;
-  --color-sidebar-bg: #0b0d12;
-  --color-sidebar-border: #1e2130;
-  --color-sidebar-text: #e5e7eb;
-  --color-sidebar-text-muted: #6b7280;
-  --color-accent: #374151;
-  --color-accent-soft: #2d3140;
-  --color-content-gradient-1: #13151d;
-  --color-content-gradient-2: #0f1117;
-  --color-content-gradient-3: #0d0f15;
+  --bg-primary: #0e0e0e;
+  --bg-secondary: #1a1a1a;
+  --bg-tertiary: #242424;
+  --bg-hover: #2a2a2a;
+  --border-default: #6e6e6e;
+  --text-primary: #eaeaea;
+  --text-secondary: #b5b5b5;
+  --text-muted: #8c8c8c;
+  --primary-default: #556b2f;
+  --primary-hover: #6b8e23;
+  --primary-ring: rgba(85, 107, 47, 0.35);
+  --primary-subtle: rgba(85, 107, 47, 0.15);
 }
 
 /* ── Compact mode ────────────────────────────────────────── */
@@ -141,15 +141,15 @@ body,
 }
 
 body {
-  background-color: var(--color-bg);
-  color: var(--color-text);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
 }
 
 /* ── Global input resets (prevent dark autofill highlights) ── */
 
 input, textarea, select {
-  color: var(--color-text);
-  background-color: var(--color-bg);
+  color: var(--text-primary);
+  background-color: var(--bg-tertiary);
 }
 
 input:-webkit-autofill,
@@ -157,14 +157,14 @@ input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
 textarea:-webkit-autofill,
 textarea:-webkit-autofill:focus {
-  -webkit-text-fill-color: var(--color-text);
-  -webkit-box-shadow: 0 0 0 1000px var(--color-bg) inset;
+  -webkit-text-fill-color: var(--text-primary);
+  -webkit-box-shadow: 0 0 0 1000px var(--bg-primary) inset;
   transition: background-color 5000s ease-in-out 0s;
-  caret-color: var(--color-text);
+  caret-color: var(--text-primary);
 }
 
 ::selection {
-  background-color: rgba(99, 102, 241, 0.25);
+  background-color: var(--primary-ring);
   color: inherit;
 }
 
@@ -172,8 +172,8 @@ textarea:-webkit-autofill:focus {
   display: flex;
   height: 100vh;
   width: 100%;
-  background-color: var(--color-bg);
-  color: var(--color-text);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
 }
 
 .sidebar {
@@ -182,9 +182,9 @@ textarea:-webkit-autofill:focus {
   display: flex;
   flex-direction: column;
   padding: var(--spacing-lg) var(--spacing-md);
-  background-color: var(--color-sidebar-bg);
-  color: var(--color-sidebar-text);
-  border-right: 1px solid var(--color-sidebar-border);
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  border-right: 1px solid var(--border-default);
   transition: width var(--anim-duration-slow) var(--anim-easing);
   overflow: hidden;
 }
@@ -206,7 +206,7 @@ textarea:-webkit-autofill:focus {
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--color-sidebar-text-muted);
+  color: var(--text-muted);
   white-space: nowrap;
   overflow: hidden;
   transition: opacity 0.25s ease;
@@ -226,9 +226,9 @@ textarea:-webkit-autofill:focus {
   width: 28px;
   height: 28px;
   border: none;
-  border-radius: 6px;
+  border-radius: 4px;
   background: transparent;
-  color: var(--color-sidebar-text-muted);
+  color: var(--text-muted);
   cursor: pointer;
   flex-shrink: 0;
   transition:
@@ -237,8 +237,8 @@ textarea:-webkit-autofill:focus {
 }
 
 .sidebar-collapse-btn:hover {
-  background-color: var(--color-accent-soft);
-  color: var(--color-sidebar-text);
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
 }
 
 .sidebar-collapse-icon {
@@ -270,10 +270,10 @@ textarea:-webkit-autofill:focus {
   gap: 10px;
   width: 100%;
   padding: var(--spacing-sm) 10px;
-  border-radius: 6px;
+  border-radius: 4px;
   border: none;
   background: transparent;
-  color: var(--color-sidebar-text);
+  color: var(--text-primary);
   font-size: 0.875rem;
   text-align: left;
   cursor: pointer;
@@ -311,11 +311,12 @@ textarea:-webkit-autofill:focus {
 }
 
 .sidebar-nav-item:hover {
-  background-color: var(--color-accent-soft);
+  background-color: var(--bg-tertiary);
 }
 
 .sidebar-nav-item.is-active {
-  background-color: var(--color-accent);
+  background-color: var(--primary-default);
+  color: #ffffff;
 }
 
 .app-main {
@@ -323,7 +324,7 @@ textarea:-webkit-autofill:focus {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  background-color: var(--color-bg-elevated);
+  background-color: var(--bg-primary);
 }
 
 .app-header {
@@ -332,8 +333,8 @@ textarea:-webkit-autofill:focus {
   justify-content: space-between;
   height: 56px;
   padding: 0 20px;
-  border-bottom: 1px solid var(--color-border-subtle);
-  background-color: var(--color-bg-elevated);
+  border-bottom: 1px solid var(--border-default);
+  background-color: var(--bg-primary);
 }
 
 .app-header-left {
@@ -356,17 +357,17 @@ textarea:-webkit-autofill:focus {
   justify-content: center;
   width: 34px;
   height: 34px;
-  border: 1px solid var(--color-border-subtle);
-  border-radius: 6px;
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
   background: transparent;
-  color: var(--color-text-muted);
+  color: var(--text-muted);
   cursor: pointer;
   transition: background-color 0.12s ease, color 0.12s ease;
 }
 
 .header-menu-btn:hover {
-  background-color: var(--color-bg);
-  color: var(--color-text);
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
 }
 
 .app-header-right {
@@ -383,10 +384,10 @@ textarea:-webkit-autofill:focus {
   font-size: 0.8125rem;
   font-weight: 500;
   font-family: inherit;
-  border: 1px solid var(--color-border-subtle);
-  border-radius: 6px;
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
   background-color: transparent;
-  color: var(--color-text-muted);
+  color: var(--text-muted);
   cursor: pointer;
   transition:
     background-color var(--anim-duration-fast) ease,
@@ -394,8 +395,8 @@ textarea:-webkit-autofill:focus {
 }
 
 .header-lock-btn:hover {
-  background-color: var(--color-bg);
-  color: var(--color-text);
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
 }
 
 .header-user {
@@ -407,7 +408,7 @@ textarea:-webkit-autofill:focus {
 .header-user-name {
   font-size: 0.875rem;
   font-weight: 500;
-  color: var(--color-text);
+  color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -418,8 +419,8 @@ textarea:-webkit-autofill:focus {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background-color: var(--color-sidebar-bg);
-  color: var(--color-sidebar-text);
+  background-color: var(--primary-default);
+  color: #ffffff;
   font-size: 0.8125rem;
   font-weight: 600;
   display: flex;
@@ -434,12 +435,7 @@ textarea:-webkit-autofill:focus {
   flex: 1;
   padding: var(--spacing-xl);
   overflow: auto;
-  background: radial-gradient(
-    circle at top left,
-    var(--color-content-gradient-1) 0,
-    var(--color-content-gradient-2) 40%,
-    var(--color-content-gradient-3) 100%
-  );
+  background-color: var(--bg-primary);
 }
 
 .app-content-inner {
@@ -455,7 +451,7 @@ textarea:-webkit-autofill:focus {
 
 .app-content-inner p {
   margin-top: 0;
-  color: var(--color-text-muted);
+  color: var(--text-muted);
 }
 
 /* ── Unlock transition (login → dashboard) ──────────────── */
@@ -472,7 +468,7 @@ textarea:-webkit-autofill:focus {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--color-bg);
+  background-color: var(--bg-primary);
   animation: unlock-lifecycle 380ms cubic-bezier(0.4, 0, 0.2, 1) both;
 }
 
@@ -510,7 +506,7 @@ textarea:-webkit-autofill:focus {
 
 /* Lock icon — neutral colour, no glow */
 .unlock-transition__icon {
-  color: var(--color-text-muted);
+  color: var(--text-muted);
   opacity: 0.6;
 }
 
@@ -534,7 +530,7 @@ textarea:-webkit-autofill:focus {
   font-size: 0.875rem;
   font-weight: 600;
   letter-spacing: 0.04em;
-  color: var(--color-text-muted);
+  color: var(--text-muted);
   opacity: 0.6;
 }
 

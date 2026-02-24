@@ -3,7 +3,7 @@
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background-color: var(--color-bg);
+  background-color: var(--bg-primary);
   padding: 16px;
   transition: background-color 0.3s ease;
 }
@@ -13,9 +13,9 @@
   width: 100%;
   max-width: 420px;
   min-width: 0;
-  background-color: var(--color-bg-elevated);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: 12px;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
   padding: 44px 36px 34px;
   transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
@@ -49,15 +49,15 @@
   justify-content: center;
   width: 52px;
   height: 52px;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #1a2236 0%, #2d3a5c 100%);
+  border-radius: 4px;
+  background-color: var(--primary-default);
   margin-bottom: 16px;
-  box-shadow: 0 2px 8px rgba(26, 34, 54, 0.25);
+  box-shadow: none;
 }
 
 :global([data-theme="dark"]) .brandIcon {
-  background: linear-gradient(135deg, #374151 0%, #4b5563 100%);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+  background-color: var(--primary-default);
+  box-shadow: none;
 }
 
 .brandIcon svg {
@@ -68,14 +68,14 @@
   margin: 0 0 6px;
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--color-text);
+  color: var(--text-primary);
   letter-spacing: -0.02em;
 }
 
 .subtitle {
   margin: 0;
   font-size: 0.8125rem;
-  color: var(--color-text-muted);
+  color: var(--text-muted);
   letter-spacing: 0.01em;
 }
 
@@ -96,7 +96,7 @@
 .label {
   font-size: 0.8125rem;
   font-weight: 500;
-  color: var(--color-text-muted);
+  color: var(--text-muted);
 }
 
 .inputWrapper {
@@ -110,10 +110,10 @@
   padding: 10px 40px 10px 14px;
   font-size: 0.9375rem;
   font-family: inherit;
-  color: var(--color-text);
-  background-color: var(--color-bg);
-  border: 1.5px solid var(--color-border-subtle);
-  border-radius: 8px;
+  color: var(--text-primary);
+  background-color: var(--bg-tertiary);
+  border: 1.5px solid var(--border-default);
+  border-radius: 4px;
   outline: none;
   transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
   -webkit-appearance: none;
@@ -131,38 +131,38 @@
 }
 
 .input::placeholder {
-  color: var(--color-text-muted);
+  color: var(--text-muted);
   opacity: 0.55;
 }
 
 .input:hover {
-  border-color: var(--color-text-muted);
+  border-color: var(--text-muted);
 }
 
 .input:focus {
-  border-color: #6366f1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
-  background-color: var(--color-bg-elevated);
+  border-color: var(--primary-default);
+  box-shadow: 0 0 0 3px var(--primary-ring);
+  background-color: var(--bg-secondary);
 }
 
 :global([data-theme="dark"]) .input:focus {
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+  box-shadow: 0 0 0 3px var(--primary-ring);
 }
 
 /* ── Remove autofill dark highlight ──────────────────────── */
 .input:-webkit-autofill,
 .input:-webkit-autofill:hover,
 .input:-webkit-autofill:focus {
-  -webkit-text-fill-color: var(--color-text);
-  -webkit-box-shadow: 0 0 0 1000px var(--color-bg) inset;
+  -webkit-text-fill-color: var(--text-primary);
+  -webkit-box-shadow: 0 0 0 1000px var(--bg-tertiary) inset;
   transition: background-color 5000s ease-in-out 0s;
-  caret-color: var(--color-text);
-  border-color: var(--color-border-subtle);
+  caret-color: var(--text-primary);
+  border-color: var(--border-default);
 }
 
 /* ── Remove text selection dark highlight ────────────────── */
 .input::selection {
-  background-color: rgba(99, 102, 241, 0.25);
+  background-color: var(--primary-ring);
   color: inherit;
 }
 
@@ -177,15 +177,15 @@
   padding: 0;
   border: none;
   background: transparent;
-  color: var(--color-text-muted);
+  color: var(--text-muted);
   cursor: pointer;
-  border-radius: 6px;
+  border-radius: 4px;
   transition: color 0.12s ease, background-color 0.12s ease;
 }
 
 .toggleButton:hover {
-  color: var(--color-text);
-  background-color: var(--color-bg);
+  color: var(--text-primary);
+  background-color: var(--bg-tertiary);
 }
 
 /* ── Error area ──────────────────────────────────────────── */
@@ -199,7 +199,7 @@
   align-items: center;
   gap: 5px;
   font-size: 0.8rem;
-  color: #ef4444;
+  color: var(--color-danger);
   animation: errorFadeIn 150ms ease-out;
 }
 
@@ -209,7 +209,7 @@
 }
 
 :global([data-theme="dark"]) .errorText {
-  color: #f87171;
+  color: var(--color-danger);
 }
 
 /* ── Remember device ─────────────────────────────────────── */
@@ -225,14 +225,14 @@
 .checkbox {
   width: 16px;
   height: 16px;
-  accent-color: #6366f1;
+  accent-color: var(--primary-default);
   cursor: pointer;
   flex-shrink: 0;
 }
 
 .checkboxLabel {
   font-size: 0.8125rem;
-  color: var(--color-text-muted);
+  color: var(--text-muted);
 }
 
 /* ── Login Button ────────────────────────────────────────── */
@@ -245,22 +245,22 @@
   font-family: inherit;
   letter-spacing: 0.01em;
   color: #ffffff;
-  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+  background-color: var(--primary-default);
   border: none;
-  border-radius: 8px;
+  border-radius: 4px;
   cursor: pointer;
   transition: opacity 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  box-shadow: 0 1px 3px rgba(99, 102, 241, 0.3);
+  box-shadow: none;
   overflow: hidden;
 }
 
 .loginButton:hover:not(:disabled) {
-  opacity: 0.92;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
+  background-color: var(--primary-hover);
+  box-shadow: none;
 }
 
 .loginButton:active:not(:disabled) {
@@ -335,14 +335,14 @@
 .footer {
   margin-top: 28px;
   padding-top: 20px;
-  border-top: 1px solid var(--color-border-subtle);
+  border-top: 1px solid var(--border-default);
   text-align: center;
 }
 
 .footerText {
   margin: 0;
   font-size: 0.75rem;
-  color: var(--color-text-muted);
+  color: var(--text-muted);
   line-height: 1.6;
   opacity: 0.7;
 }
@@ -351,6 +351,6 @@
 @media (max-width: 480px) {
   .card {
     padding: 28px 20px 24px;
-    border-radius: 8px;
+    border-radius: 4px;
   }
 }

@@ -11,13 +11,13 @@
   margin: 0;
   font-size: 1.25rem;
   font-weight: 700;
-  color: var(--color-text);
+  color: var(--text-primary);
 }
 
 .subtitle {
   margin: -14px 0 0;
   font-size: 0.875rem;
-  color: var(--color-text-muted);
+  color: var(--text-muted);
 }
 
 /* ── Category Grid ───────────────────────────────────────── */
@@ -32,22 +32,22 @@
   flex-direction: column;
   gap: 8px;
   padding: 18px 16px;
-  border: 1px solid var(--color-border-subtle);
-  border-radius: 10px;
-  background-color: var(--color-bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  background-color: var(--bg-secondary);
   cursor: pointer;
   transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.12s ease;
 }
 
 .card:hover {
-  border-color: #9ca3af;
+  border-color: var(--text-muted);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   transform: translateY(-1px);
 }
 
 .cardActive {
-  border-color: #6366f1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  border-color: var(--primary-default);
+  box-shadow: 0 0 0 3px var(--primary-ring);
 }
 
 .cardHeader {
@@ -59,8 +59,8 @@
 .cardIcon {
   width: 36px;
   height: 36px;
-  border-radius: 8px;
-  background-color: #6366f1;
+  border-radius: 4px;
+  background-color: var(--primary-default);
   color: #fff;
   display: flex;
   align-items: center;
@@ -73,12 +73,12 @@
 .cardName {
   font-size: 0.9375rem;
   font-weight: 600;
-  color: var(--color-text);
+  color: var(--text-primary);
 }
 
 .cardCount {
   font-size: 0.8125rem;
-  color: var(--color-text-muted);
+  color: var(--text-muted);
 }
 
 /* ── Entry list within category ──────────────────────────── */
@@ -92,7 +92,7 @@
   margin: 0;
   font-size: 1rem;
   font-weight: 600;
-  color: var(--color-text);
+  color: var(--text-primary);
 }
 
 .entryList {
@@ -106,16 +106,16 @@
   align-items: center;
   gap: 12px;
   padding: 10px 14px;
-  border: 1px solid var(--color-border-subtle);
-  border-radius: 8px;
-  background-color: var(--color-bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  background-color: var(--bg-secondary);
 }
 
 .entryAvatar {
   width: 32px;
   height: 32px;
-  border-radius: 6px;
-  background-color: #374151;
+  border-radius: 4px;
+  background-color: var(--primary-default);
   color: #fff;
   display: flex;
   align-items: center;
@@ -135,12 +135,12 @@
 .entryService {
   font-size: 0.875rem;
   font-weight: 600;
-  color: var(--color-text);
+  color: var(--text-primary);
 }
 
 .entryUser {
   font-size: 0.75rem;
-  color: var(--color-text-muted);
+  color: var(--text-muted);
 }
 
 .backBtn {
@@ -149,19 +149,19 @@
   font-size: 0.8125rem;
   font-weight: 500;
   font-family: inherit;
-  border: 1px solid var(--color-border-subtle);
-  border-radius: 6px;
-  background-color: var(--color-bg-elevated);
-  color: var(--color-text);
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
   cursor: pointer;
   transition: background-color 0.12s ease;
 }
 
 .backBtn:hover {
-  background-color: var(--color-bg);
+  background-color: var(--bg-tertiary);
 }
 
 .emptyText {
   font-size: 0.875rem;
-  color: var(--color-text-muted);
+  color: var(--text-muted);
 }

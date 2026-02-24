@@ -20,7 +20,7 @@
   margin: 0;
   font-size: 1.25rem;
   font-weight: 700;
-  color: #111827;
+  color: var(--text-primary);
 }
 
 .addBtn {
@@ -32,15 +32,15 @@
   font-weight: 600;
   font-family: inherit;
   border: none;
-  border-radius: 6px;
-  background-color: #1a2236;
+  border-radius: 4px;
+  background-color: var(--primary-default);
   color: #ffffff;
   cursor: pointer;
   transition: background-color 0.15s ease, transform 0.1s ease;
 }
 
 .addBtn:hover {
-  background-color: #243050;
+  background-color: var(--primary-hover);
 }
 
 .addBtn:active {
@@ -57,16 +57,16 @@
   margin: 0;
   padding: 10px 14px;
   font-size: 0.8125rem;
-  color: #dc2626;
-  background-color: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: 6px;
+  color: var(--color-danger);
+  background-color: rgba(200, 101, 101, 0.08);
+  border: 1px solid rgba(200, 101, 101, 0.3);
+  border-radius: 4px;
 }
 
 .loading {
   margin: 0;
   font-size: 0.875rem;
-  color: #6b7280;
+  color: var(--text-muted);
 }
 
 /* ── Delete confirmation backdrop ────────────────────────── */
@@ -90,8 +90,8 @@
   width: 100%;
   max-width: 380px;
   padding: 22px 24px;
-  background-color: #ffffff;
-  border-radius: 10px;
+  background-color: var(--bg-secondary);
+  border-radius: 4px;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
   animation: slideUp 0.2s ease-out;
 }
@@ -111,13 +111,13 @@
   margin: 0 0 8px;
   font-size: 1rem;
   font-weight: 700;
-  color: #111827;
+  color: var(--text-primary);
 }
 
 .confirmText {
   margin: 0 0 18px;
   font-size: 0.875rem;
-  color: #4b5563;
+  color: var(--text-secondary);
   line-height: 1.5;
 }
 
@@ -132,16 +132,16 @@
   font-size: 0.8125rem;
   font-weight: 500;
   font-family: inherit;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  background-color: #ffffff;
-  color: #374151;
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  background-color: transparent;
+  color: var(--text-secondary);
   cursor: pointer;
   transition: background-color 0.12s ease;
 }
 
 .confirmCancel:hover {
-  background-color: #f3f4f6;
+  background-color: var(--bg-tertiary);
 }
 
 .confirmDelete {
@@ -150,15 +150,15 @@
   font-weight: 600;
   font-family: inherit;
   border: none;
-  border-radius: 6px;
-  background-color: #dc2626;
+  border-radius: 4px;
+  background-color: var(--color-danger);
   color: #ffffff;
   cursor: pointer;
   transition: background-color 0.12s ease, transform 0.1s ease;
 }
 
 .confirmDelete:hover {
-  background-color: #b91c1c;
+  opacity: 0.9;
 }
 
 .confirmDelete:active {

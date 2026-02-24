@@ -292,7 +292,7 @@ export default function CsvImportModal({
         {/* stage: importing */}
         {stage === "importing" && (
           <div style={{ padding: "32px 20px", textAlign: "center" }}>
-            <p style={{ color: "var(--color-text-muted)", fontSize: "0.875rem" }}>
+            <p style={{ color: "var(--text-muted)", fontSize: "0.875rem" }}>
               Importing {selected.size} entries…
             </p>
           </div>
