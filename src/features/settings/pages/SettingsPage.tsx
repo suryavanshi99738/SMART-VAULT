@@ -34,7 +34,7 @@ const clipboardClearOptions = [
   { value: 120, label: "2 minutes" },
 ];
 
-const DEFAULT_SHORTCUT = "Ctrl+Shift+V";
+const DEFAULT_SHORTCUT = "Ctrl+Alt+V";
 
 // ── Props ──────────────────────────────────────────────────────────────────────
 
@@ -90,7 +90,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
     msg: string;
   } | null>(null);
   const [shortcutInput, setShortcutInput] = useState(settings.global_shortcut);
-  const [shortcutRecording, setShortcutRecording] = useState(false);
+  const [shortcutError, setShortcutError] = useState<string | null>(null);
 
   useEffect(() => {
     setLocal(settings);
@@ -199,54 +199,77 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
     [local.global_shortcut, update]
   );
 
-  // ── Shortcut keybinding recording ──────────────────────────────────────────
-  const handleShortcutKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (!shortcutRecording) return;
-      e.preventDefault();
+  // ── Shortcut keybinding commit (on blur or Enter) ─────────────────────────
 
-      const parts: string[] = [];
-      if (e.ctrlKey) parts.push("Ctrl");
-      if (e.altKey) parts.push("Alt");
-      if (e.shiftKey) parts.push("Shift");
-      if (e.metaKey) parts.push("Super");
+  /** Normalize user-typed accelerator to Tauri format (e.g. "ctrl+alt+v" → "Ctrl+Alt+V") */
+  const normalizeAccelerator = (raw: string): string => {
+    return raw
+      .split("+")
+      .map((part) => {
+        const p = part.trim().toLowerCase();
+        if (p === "ctrl" || p === "control") return "Ctrl";
+        if (p === "alt") return "Alt";
+        if (p === "shift") return "Shift";
+        if (p === "super" || p === "meta" || p === "win" || p === "cmd") return "Super";
+        if (p === "cmdorctrl" || p === "commandorcontrol") return "CmdOrCtrl";
+        // Function keys stay as-is (F1-F24)
+        if (/^f\d{1,2}$/.test(p)) return p.toUpperCase();
+        // Single letter → uppercase
+        if (p.length === 1) return p.toUpperCase();
+        // Named keys: capitalize first letter
+        return p.charAt(0).toUpperCase() + p.slice(1);
+      })
+      .filter(Boolean)
+      .join("+");
+  };
 
-      const key = e.key;
-      // Ignore modifier-only presses
-      if (
-        ["Control", "Alt", "Shift", "Meta"].includes(key)
-      )
+  const commitShortcut = useCallback(
+    async (accelerator: string) => {
+      const normalized = normalizeAccelerator(accelerator);
+      setShortcutError(null);
+
+      // If empty or unchanged, revert to current saved value
+      if (!normalized || normalized === local.global_shortcut) {
+        setShortcutInput(local.global_shortcut);
         return;
+      }
 
-      // Convert to Tauri accelerator format
-      const keyName = key.length === 1 ? key.toUpperCase() : key;
-      parts.push(keyName);
-
-      const accelerator = parts.join("+");
-      setShortcutInput(accelerator);
-      setShortcutRecording(false);
+      // Always update the display to the normalized form
+      setShortcutInput(normalized);
 
       // Try to register the new shortcut
-      (async () => {
-        try {
-          if (local.global_shortcut_enabled) {
-            await registerGlobalShortcut(accelerator);
-          }
-          update({ global_shortcut: accelerator });
-        } catch (err: unknown) {
-          setBackupStatus({
-            type: "error",
-            msg: `Invalid shortcut: ${err instanceof Error ? err.message : String(err)}`,
-          });
-          setShortcutInput(local.global_shortcut);
+      try {
+        if (local.global_shortcut_enabled) {
+          await registerGlobalShortcut(normalized);
         }
-      })();
+        // Registration succeeded (or feature disabled) — persist the new value.
+        // App.tsx's useEffect will also call registerGlobalShortcut, which is
+        // harmless since Rust unregisters-all before each registration.
+        update({ global_shortcut: normalized });
+      } catch {
+        // Registration failed — likely a system-level conflict or invalid format
+        setShortcutError(
+          "Global hotkey already registered in system for another app/file"
+        );
+        setShortcutInput(local.global_shortcut);
+      }
     },
-    [shortcutRecording, local.global_shortcut_enabled, local.global_shortcut, update]
+    [local.global_shortcut_enabled, local.global_shortcut, update]
+  );
+
+  const handleShortcutKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        e.currentTarget.blur(); // blur triggers commitShortcut via onBlur
+      }
+    },
+    []
   );
 
   const resetShortcut = useCallback(async () => {
     setShortcutInput(DEFAULT_SHORTCUT);
+    setShortcutError(null);
     try {
       if (local.global_shortcut_enabled) {
         await registerGlobalShortcut(DEFAULT_SHORTCUT);
@@ -556,35 +579,41 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
           <div className={styles.settingInfo}>
             <span className={styles.settingLabel}>Shortcut keybinding</span>
             <span className={styles.settingHint}>
-              {shortcutRecording
-                ? "Press the desired key combination…"
-                : "Click the field to record a new shortcut."}
+              Click the field to edit. Press Enter or click away to apply.
             </span>
           </div>
-          <div className={styles.shortcutGroup}>
-            <input
-              className={`${styles.shortcutInput} ${
-                shortcutRecording ? styles.shortcutRecording : ""
-              }`}
-              value={shortcutInput}
-              readOnly
-              onFocus={() => setShortcutRecording(true)}
-              onBlur={() => setShortcutRecording(false)}
-              onKeyDown={handleShortcutKeyDown}
-              disabled={!local.global_shortcut_enabled}
-              aria-label="Global shortcut keybinding"
-            />
-            <button
-              className={styles.resetBtn}
-              onClick={resetShortcut}
-              disabled={
-                !local.global_shortcut_enabled ||
-                local.global_shortcut === DEFAULT_SHORTCUT
-              }
-              title="Reset to default"
-            >
-              ↺
-            </button>
+          <div className={styles.shortcutColumn}>
+            <div className={styles.shortcutGroup}>
+              <input
+                className={styles.shortcutInput}
+                value={shortcutInput}
+                onChange={(e) => {
+                  setShortcutInput(e.target.value);
+                  setShortcutError(null);
+                }}
+                onFocus={(e) => e.target.select()}
+                onBlur={(e) => commitShortcut(e.target.value)}
+                onKeyDown={handleShortcutKeyDown}
+                disabled={!local.global_shortcut_enabled}
+                spellCheck={false}
+                autoComplete="off"
+                aria-label="Global shortcut keybinding"
+              />
+              <button
+                className={styles.resetBtn}
+                onClick={resetShortcut}
+                disabled={
+                  !local.global_shortcut_enabled ||
+                  local.global_shortcut === DEFAULT_SHORTCUT
+                }
+                title="Reset to default"
+              >
+                ↺
+              </button>
+            </div>
+            {shortcutError && (
+              <span className={styles.shortcutError}>{shortcutError}</span>
+            )}
           </div>
         </div>
 
@@ -702,7 +731,98 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
         </div>
       </section>
 
-      {/* ── 📥 Data Import ──────────────────────────────── */}
+      {/* ── � Document Storage ─────────────────────────── */}
+      <section className={styles.section}>
+        <h3 className={styles.sectionTitle}>
+          <span className={styles.sectionIcon}>📁</span> Document Storage
+        </h3>
+        <p className={styles.sectionDesc}>
+          Settings for encrypted document vault behaviour.
+        </p>
+
+        {/* Secure delete */}
+        <div className={styles.settingRow}>
+          <label
+            className={styles.settingInfo}
+            htmlFor="toggle-doc-secure-delete"
+          >
+            <span className={styles.settingLabel}>Secure delete</span>
+            <span className={styles.settingHint}>
+              Multi-pass overwrite before deletion — prevents forensic recovery.
+            </span>
+          </label>
+          <Toggle
+            id="toggle-doc-secure-delete"
+            checked={local.doc_secure_delete}
+            onChange={(val) => update({ doc_secure_delete: val })}
+            ariaLabel="Enable secure file deletion"
+          />
+        </div>
+
+        {/* Auto-cleanup temp files */}
+        <div className={styles.settingRow}>
+          <div className={styles.settingInfo}>
+            <span className={styles.settingLabel}>
+              Auto-cleanup temp files
+            </span>
+            <span className={styles.settingHint}>
+              Minutes before decrypted temp files are wiped (0 = manual only).
+            </span>
+          </div>
+          <select
+            className={styles.settingSelect}
+            value={local.doc_auto_cleanup_minutes}
+            onChange={(e) =>
+              update({ doc_auto_cleanup_minutes: Number(e.target.value) })
+            }
+          >
+            <option value={0}>Manual only</option>
+            <option value={1}>1 minute</option>
+            <option value={5}>5 minutes</option>
+            <option value={10}>10 minutes</option>
+            <option value={15}>15 minutes</option>
+            <option value={30}>30 minutes</option>
+          </select>
+        </div>
+
+        {/* Chunk size */}
+        <div className={styles.settingRow}>
+          <div className={styles.settingInfo}>
+            <span className={styles.settingLabel}>
+              Encryption chunk size
+            </span>
+            <span className={styles.settingHint}>
+              Size of each AES-256-GCM encryption block. Larger = faster for big files.
+            </span>
+          </div>
+          <select
+            className={styles.settingSelect}
+            value={local.doc_chunk_size_mb}
+            onChange={(e) =>
+              update({ doc_chunk_size_mb: Number(e.target.value) })
+            }
+          >
+            <option value={1}>1 MB</option>
+            <option value={2}>2 MB</option>
+            <option value={4}>4 MB (default)</option>
+            <option value={8}>8 MB</option>
+            <option value={16}>16 MB</option>
+          </select>
+        </div>
+
+        {/* Encryption info badge */}
+        <div className={styles.settingRow}>
+          <div className={styles.settingInfo}>
+            <span className={styles.settingLabel}>Encryption algorithm</span>
+            <span className={styles.settingHint}>
+              AES-256-GCM with unique nonce per chunk. Always active.
+            </span>
+          </div>
+          <span className={styles.statusBadge}>AES-256-GCM</span>
+        </div>
+      </section>
+
+      {/* ── �📥 Data Import ──────────────────────────────── */}
       <section className={styles.section}>
         <h3 className={styles.sectionTitle}>
           <span className={styles.sectionIcon}>📥</span> Data Import

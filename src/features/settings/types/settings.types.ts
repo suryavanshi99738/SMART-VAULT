@@ -30,13 +30,20 @@ export interface AppSettings {
   // ── Global shortcut ────────────────────────────────────────────────────────
   /** Whether the global keyboard shortcut is active */
   global_shortcut_enabled: boolean;
-  /** Accelerator string, e.g. "Ctrl+Shift+V" */
+  /** Accelerator string, e.g. "Ctrl+Alt+V" */
   global_shortcut: string;
   // ── Backup ─────────────────────────────────────────────────────────────────
   /** ISO-8601 timestamp of the last successful backup export */
   last_backup_date: string | null;
   /** Periodically remind the user to back up the vault */
   backup_reminder: boolean;
+  // ── Document storage ───────────────────────────────────────────────────────
+  /** Auto-cleanup temp decrypted documents after this many minutes (0 = manual only) */
+  doc_auto_cleanup_minutes: number;
+  /** Use secure (multi-pass overwrite) deletion for document files */
+  doc_secure_delete: boolean;
+  /** Chunk size in megabytes for document encryption (1–16 MB) */
+  doc_chunk_size_mb: number;
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -52,7 +59,10 @@ export const DEFAULT_SETTINGS: AppSettings = {
   close_to_tray: false,
   restore_window_state: false,
   global_shortcut_enabled: true,
-  global_shortcut: "Ctrl+Shift+V",
+  global_shortcut: "Ctrl+Alt+V",
   last_backup_date: null,
   backup_reminder: false,
+  doc_auto_cleanup_minutes: 5,
+  doc_secure_delete: true,
+  doc_chunk_size_mb: 4,
 };

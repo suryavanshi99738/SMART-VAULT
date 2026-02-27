@@ -69,7 +69,7 @@ pub struct AppSettings {
     #[serde(default = "default_true")]
     pub global_shortcut_enabled: bool,
 
-    /// Accelerator string, e.g. "Ctrl+Shift+V".
+    /// Accelerator string, e.g. "Ctrl+Alt+V".
     #[serde(default = "default_shortcut")]
     pub global_shortcut: String,
 
@@ -82,13 +82,28 @@ pub struct AppSettings {
     /// Periodically remind the user to back up the vault.
     #[serde(default)]
     pub backup_reminder: bool,
+    // ── Document storage ─────────────────────────────────────────────────────
+
+    /// Auto-cleanup temporary decrypted files after this many minutes (0 = manual only).
+    #[serde(default = "default_doc_auto_cleanup_minutes")]
+    pub doc_auto_cleanup_minutes: u32,
+
+    /// Use secure (multi-pass overwrite) deletion for documents.
+    #[serde(default = "default_true")]
+    pub doc_secure_delete: bool,
+
+    /// Chunk size in megabytes for document encryption (1–16 MB).
+    #[serde(default = "default_doc_chunk_size_mb")]
+    pub doc_chunk_size_mb: u32,
 }
 
 fn default_auto_lock_minutes() -> u32 { 5 }
 fn default_clipboard_clear_seconds() -> u32 { 15 }
 fn default_enable_animations() -> bool { true }
 fn default_true() -> bool { true }
-fn default_shortcut() -> String { "Ctrl+Shift+V".to_string() }
+fn default_shortcut() -> String { "Ctrl+Alt+V".to_string() }
+fn default_doc_auto_cleanup_minutes() -> u32 { 5 }
+fn default_doc_chunk_size_mb() -> u32 { 4 }
 
 impl Default for AppSettings {
     fn default() -> Self {
@@ -107,6 +122,9 @@ impl Default for AppSettings {
             global_shortcut: default_shortcut(),
             last_backup_date: None,
             backup_reminder: false,
+            doc_auto_cleanup_minutes: default_doc_auto_cleanup_minutes(),
+            doc_secure_delete: true,
+            doc_chunk_size_mb: default_doc_chunk_size_mb(),
         }
     }
 }

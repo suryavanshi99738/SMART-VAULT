@@ -2,7 +2,10 @@ mod auth;
 mod backup;
 mod crypto;
 mod db;
+mod document_commands;
+mod document_crypto;
 mod import;
+mod secure_wipe;
 mod security;
 mod settings;
 mod shortcut;
@@ -16,6 +19,10 @@ use tauri::Manager;
 
 use auth::{check_if_master_exists, lock_vault, set_master_password, unlock_vault};
 use backup::{export_vault, import_vault};
+use document_commands::{
+    cleanup_all_temp_documents, cleanup_temp_document, delete_document, get_all_documents,
+    get_document_info, import_document, open_document, secure_delete_document,
+};
 use import::{import_csv_entries, parse_csv_preview};
 use security::{clear_clipboard, estimate_password_strength};
 use settings::{load_settings, save_settings};
@@ -62,10 +69,23 @@ pub fn run() {
             // CSV import
             parse_csv_preview,
             import_csv_entries,
+            // Document vault
+            import_document,
+            open_document,
+            cleanup_temp_document,
+            cleanup_all_temp_documents,
+            delete_document,
+            get_all_documents,
+            get_document_info,
+            secure_delete_document,
         ])
         .setup(|app| {
             // ── System tray ────────────────────────────────────────────────
             tray::create_tray(app.handle())?;
+
+            // ── Global shortcut ────────────────────────────────────────────
+            // Register immediately so the shortcut works before React loads.
+            shortcut::init_global_shortcut(app.handle());
 
             // ── Close-to-tray intercept ────────────────────────────────────
             // If the user enabled "Close to Tray" in settings, hide the

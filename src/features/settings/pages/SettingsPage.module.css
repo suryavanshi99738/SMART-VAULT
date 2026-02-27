@@ -380,6 +380,13 @@
 }
 
 /* ── Shortcut input ──────────────────────────────────────── */
+.shortcutColumn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
 .shortcutGroup {
   display: flex;
   align-items: center;
@@ -387,17 +394,18 @@
 }
 
 .shortcutInput {
-  width: 140px;
+  width: 160px;
   padding: 6px 10px;
   font-size: 0.8125rem;
   font-family: "SF Mono", "Cascadia Code", monospace;
   font-weight: 600;
-  text-align: center;
+  text-align: left;
   border: 1px solid var(--border-default);
   border-radius: 4px;
   background-color: var(--bg-tertiary);
   color: var(--text-primary);
-  cursor: pointer;
+  caret-color: var(--primary-default);
+  cursor: text;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 .shortcutInput:focus {
@@ -410,14 +418,13 @@
   cursor: not-allowed;
 }
 
-.shortcutRecording {
-  border-color: var(--primary-default);
-  animation: recordPulse 1.2s ease-in-out infinite;
-}
-
-@keyframes recordPulse {
-  0%, 100% { box-shadow: 0 0 0 3px var(--primary-ring); }
-  50%      { box-shadow: 0 0 0 5px var(--primary-ring); }
+.shortcutError {
+  font-size: 0.6875rem;
+  color: var(--color-danger);
+  font-weight: 500;
+  max-width: 200px;
+  text-align: right;
+  line-height: 1.3;
 }
 
 .resetBtn {

@@ -1,0 +1,322 @@
+/* src/features/documents/pages/DocumentsPage.module.css */
+
+/* ── Page layout ──────────────────────────────────────────── */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 28px 32px;
+  max-width: 860px;
+}
+
+.heading {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.subtitle {
+  margin: -12px 0 0;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+/* ── Toolbar ──────────────────────────────────────────────── */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.searchInput {
+  flex: 1;
+  min-width: 180px;
+  padding: 8px 12px;
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 0.8125rem;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.searchInput:focus {
+  border-color: var(--primary-default);
+}
+
+.sortSelect {
+  padding: 8px 12px;
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 0.8125rem;
+  outline: none;
+  cursor: pointer;
+}
+
+.importBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  background: var(--primary-default);
+  color: #fff;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  white-space: nowrap;
+}
+
+.importBtn:hover {
+  background: var(--primary-hover);
+}
+
+/* ── Document grid ────────────────────────────────────────── */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 14px;
+}
+
+/* ── Document card ────────────────────────────────────────── */
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 14px 12px;
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  background: var(--bg-secondary);
+  cursor: default;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.card:hover {
+  border-color: var(--primary-default);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.cardTop {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.fileIcon {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  background: var(--bg-tertiary, var(--bg-primary));
+  color: var(--primary-default);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.cardInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.cardName {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cardMeta {
+  margin: 2px 0 0;
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.lockBadge {
+  color: var(--warning, #d4a017);
+  display: flex;
+  align-items: center;
+}
+
+/* ── Card actions ─────────────────────────────────────────── */
+.cardActions {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.cardBtn {
+  flex: 1;
+  padding: 6px 0;
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.12s ease, color 0.12s ease;
+}
+
+.cardBtn:hover {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.cardBtnDanger:hover {
+  background: var(--error-bg, #fef2f2);
+  color: var(--error, #dc2626);
+  border-color: var(--error, #dc2626);
+}
+
+/* ── Empty state ──────────────────────────────────────────── */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.emptyIcon {
+  width: 48px;
+  height: 48px;
+  opacity: 0.4;
+}
+
+.emptyText {
+  font-size: 0.875rem;
+  max-width: 260px;
+}
+
+.emptyBtn {
+  margin-top: 4px;
+  padding: 8px 20px;
+  border: 1px dashed var(--border-default);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--primary-default);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.emptyBtn:hover {
+  border-color: var(--primary-default);
+  background: var(--bg-secondary);
+}
+
+/* ── Loading / errors ─────────────────────────────────────── */
+.loading {
+  text-align: center;
+  padding: 32px;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.errorBanner {
+  padding: 10px 14px;
+  border-radius: 4px;
+  background: var(--error-bg, #fef2f2);
+  color: var(--error, #dc2626);
+  font-size: 0.8125rem;
+}
+
+/* ── Confirm dialog overlay ───────────────────────────────── */
+.confirmOverlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 999;
+}
+
+.confirmBox {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  padding: 24px;
+  max-width: 380px;
+  width: 90%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.confirmTitle {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.confirmText {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+
+.confirmActions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.confirmCancel {
+  padding: 7px 16px;
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.confirmDelete {
+  padding: 7px 16px;
+  border: none;
+  border-radius: 4px;
+  background: var(--error, #dc2626);
+  color: #fff;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ── Compact mode adjustments ─────────────────────────────── */
+body.compact-mode .page {
+  gap: 14px;
+  padding: 20px 24px;
+}
+
+body.compact-mode .grid {
+  gap: 10px;
+}
+
+body.compact-mode .card {
+  padding: 12px 10px 10px;
+  gap: 6px;
+}

@@ -13,6 +13,7 @@ import VaultDashboard from "./features/vault/pages/VaultDashboard";
 import DashboardOverview from "./features/vault/pages/DashboardOverview";
 import SettingsPage from "./features/settings/pages/SettingsPage";
 import CategoriesPage from "./features/categories/pages/CategoriesPage";
+import DocumentsPage from "./features/documents/pages/DocumentsPage";
 import { useWindowLock } from "./features/settings/hooks/useWindowLock";
 import type { LockReason } from "./features/settings/hooks/useWindowLock";
 import { loadSettings, saveSettings } from "./features/settings/settingsService";
@@ -146,15 +147,21 @@ const AppInner: React.FC = () => {
   }, [handleLock]);
 
   // ── Global shortcut registration ──────────────────────────────────────────
+  // The Rust setup block already registers the shortcut at startup.
+  // This effect re-registers whenever the user changes the shortcut in settings.
+  // NOTE: No cleanup unregister — Rust's register_shortcut_inner already calls
+  // unregister_all() before each registration, so a cleanup would race with the
+  // new registration IPC and potentially leave the shortcut dead.
   useEffect(() => {
     if (settings.global_shortcut_enabled && settings.global_shortcut) {
-      registerGlobalShortcut(settings.global_shortcut).catch(() => {
-        /* non-fatal */
-      });
+      registerGlobalShortcut(settings.global_shortcut).catch((err) =>
+        console.error("[shortcut] registration failed:", err)
+      );
+    } else {
+      unregisterGlobalShortcut().catch((err) =>
+        console.error("[shortcut] unregister failed:", err)
+      );
     }
-    return () => {
-      unregisterGlobalShortcut().catch(() => {});
-    };
   }, [settings.global_shortcut_enabled, settings.global_shortcut]);
 
   // Alt+L keyboard shortcut to lock the vault
@@ -200,6 +207,13 @@ const AppInner: React.FC = () => {
         return <DashboardOverview />;
       case "vault":
         return <VaultDashboard />;
+      case "documents":
+        return (
+          <DocumentsPage
+            secureDeleteEnabled={settings.doc_secure_delete}
+            chunkSizeMb={settings.doc_chunk_size_mb}
+          />
+        );
       case "categories":
         return <CategoriesPage />;
       case "settings":

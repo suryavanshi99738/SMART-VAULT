@@ -11,6 +11,8 @@ use rusqlite::{params, Connection};
 use serde::Serialize;
 use std::{fs, path::PathBuf, sync::Mutex};
 
+use crate::document_commands::SecureDocument;
+
 /// Global database connection, initialised once at startup.
 static DB: Mutex<Option<Connection>> = Mutex::new(None);
 
@@ -80,6 +82,22 @@ pub fn init_db() -> Result<(), String> {
     // Migration: add columns for existing databases
     let _ = conn.execute("ALTER TABLE passwords ADD COLUMN email TEXT NOT NULL DEFAULT ''", []);
     let _ = conn.execute("ALTER TABLE passwords ADD COLUMN category TEXT NOT NULL DEFAULT 'General'", []);
+
+    // ── Documents table ────────────────────────────────────────────────────
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS documents (
+            id                  TEXT PRIMARY KEY,
+            name                TEXT NOT NULL,
+            encrypted_file_name TEXT NOT NULL,
+            original_extension  TEXT NOT NULL DEFAULT '',
+            size                INTEGER NOT NULL,
+            has_password        INTEGER NOT NULL DEFAULT 0,
+            created_at          INTEGER NOT NULL,
+            updated_at          INTEGER NOT NULL
+        )",
+        [],
+    )
+    .map_err(|e| format!("Documents schema migration failed: {e}"))?;
 
     let mut guard = DB.lock().map_err(|_| "DB lock poisoned.".to_string())?;
     *guard = Some(conn);
@@ -197,6 +215,111 @@ pub fn get_all_entries() -> Result<Vec<PasswordEntry>, String> {
             entries.push(row.map_err(|e| format!("Row read failed: {e}"))?);
         }
         Ok(entries)
+    })
+}
+
+// ── Document CRUD ──────────────────────────────────────────────────────────────
+
+/// Insert a new document metadata entry.
+pub fn insert_document(
+    id: &str,
+    name: &str,
+    encrypted_file_name: &str,
+    original_extension: &str,
+    size: u64,
+    has_password: bool,
+    created_at: i64,
+) -> Result<(), String> {
+    with_db(|conn| {
+        conn.execute(
+            "INSERT INTO documents (id, name, encrypted_file_name, original_extension, size, has_password, created_at, updated_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+            params![id, name, encrypted_file_name, original_extension, size, has_password as i32, created_at, created_at],
+        )
+        .map_err(|e| format!("Insert document failed: {e}"))?;
+        Ok(())
+    })
+}
+
+/// Retrieve a single document by ID.
+pub fn get_document(id: &str) -> Result<Option<SecureDocument>, String> {
+    with_db(|conn| {
+        let mut stmt = conn
+            .prepare(
+                "SELECT id, name, encrypted_file_name, original_extension, size, has_password, created_at, updated_at
+                 FROM documents WHERE id = ?1",
+            )
+            .map_err(|e| format!("Query prepare failed: {e}"))?;
+
+        let mut rows = stmt
+            .query_map(params![id], |row| {
+                let has_pw: i32 = row.get(5)?;
+                Ok(SecureDocument {
+                    id: row.get(0)?,
+                    name: row.get(1)?,
+                    encrypted_file_name: row.get(2)?,
+                    original_extension: row.get(3)?,
+                    size: row.get(4)?,
+                    has_password: has_pw != 0,
+                    created_at: row.get(6)?,
+                    updated_at: row.get(7)?,
+                })
+            })
+            .map_err(|e| format!("Query failed: {e}"))?;
+
+        match rows.next() {
+            Some(Ok(doc)) => Ok(Some(doc)),
+            Some(Err(e)) => Err(format!("Row read failed: {e}")),
+            None => Ok(None),
+        }
+    })
+}
+
+/// Retrieve all document metadata entries.
+pub fn get_all_documents() -> Result<Vec<SecureDocument>, String> {
+    with_db(|conn| {
+        let mut stmt = conn
+            .prepare(
+                "SELECT id, name, encrypted_file_name, original_extension, size, has_password, created_at, updated_at
+                 FROM documents ORDER BY updated_at DESC",
+            )
+            .map_err(|e| format!("Query prepare failed: {e}"))?;
+
+        let rows = stmt
+            .query_map([], |row| {
+                let has_pw: i32 = row.get(5)?;
+                Ok(SecureDocument {
+                    id: row.get(0)?,
+                    name: row.get(1)?,
+                    encrypted_file_name: row.get(2)?,
+                    original_extension: row.get(3)?,
+                    size: row.get(4)?,
+                    has_password: has_pw != 0,
+                    created_at: row.get(6)?,
+                    updated_at: row.get(7)?,
+                })
+            })
+            .map_err(|e| format!("Query failed: {e}"))?;
+
+        let mut docs = Vec::new();
+        for row in rows {
+            docs.push(row.map_err(|e| format!("Row read failed: {e}"))?);
+        }
+        Ok(docs)
+    })
+}
+
+/// Delete a document metadata entry by ID.
+pub fn delete_document(id: &str) -> Result<(), String> {
+    with_db(|conn| {
+        let rows = conn
+            .execute("DELETE FROM documents WHERE id = ?1", params![id])
+            .map_err(|e| format!("Delete document failed: {e}"))?;
+
+        if rows == 0 {
+            return Err("Document not found.".into());
+        }
+        Ok(())
     })
 }
 

@@ -1,0 +1,228 @@
+/* src/features/documents/components/ImportDocumentModal.module.css */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 1000;
+}
+
+.modal {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-default);
+  border-radius: 10px;
+  padding: 28px 26px 22px;
+  max-width: 440px;
+  width: 92%;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+}
+
+.title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* ── File picker area ─────────────────────────────────────── */
+.dropZone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 28px 20px;
+  border: 2px dashed var(--border-default);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.dropZone:hover {
+  border-color: var(--primary-default);
+  background: var(--bg-secondary);
+}
+
+.dropZoneActive {
+  border-color: var(--primary-default);
+  background: var(--bg-secondary);
+}
+
+.dropIcon {
+  width: 32px;
+  height: 32px;
+  color: var(--text-muted);
+}
+
+.dropText {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+.dropHint {
+  font-size: 0.6875rem;
+  color: var(--text-disabled, var(--text-muted));
+  opacity: 0.7;
+}
+
+/* ── Selected file preview ────────────────────────────────── */
+.filePreview {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  background: var(--bg-secondary);
+}
+
+.filePreviewIcon {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  background: var(--bg-primary);
+  color: var(--primary-default);
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.filePreviewInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.filePreviewName {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.filePreviewSize {
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+}
+
+.fileRemoveBtn {
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+}
+
+.fileRemoveBtn:hover {
+  color: var(--error, #dc2626);
+}
+
+/* ── Form fields ──────────────────────────────────────────── */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.input {
+  padding: 8px 12px;
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 0.8125rem;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.input:focus {
+  border-color: var(--primary-default);
+}
+
+/* ── Checkbox row ─────────────────────────────────────────── */
+.checkRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.checkLabel {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+/* ── Error & progress ─────────────────────────────────────── */
+.error {
+  font-size: 0.8125rem;
+  color: var(--error, #dc2626);
+}
+
+.progress {
+  font-size: 0.8125rem;
+  color: var(--primary-default);
+  text-align: center;
+}
+
+/* ── Actions ──────────────────────────────────────────────── */
+.actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.cancelBtn {
+  padding: 8px 18px;
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.cancelBtn:hover {
+  background: var(--bg-secondary);
+}
+
+.submitBtn {
+  padding: 8px 22px;
+  border: none;
+  border-radius: 4px;
+  background: var(--primary-default);
+  color: #fff;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.submitBtn:hover:not(:disabled) {
+  background: var(--primary-hover);
+}
+
+.submitBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
