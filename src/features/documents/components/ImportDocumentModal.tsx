@@ -1,7 +1,13 @@
 // src/features/documents/components/ImportDocumentModal.tsx
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { importDocument } from "../services/documentService";
 import { formatFileSize } from "../types/document.types";
+import {
+  generatePassword as genPw,
+  estimatePasswordStrength,
+} from "../../vault/services/vaultService";
+import { scheduleClipboardClear } from "../../clipboard/clipboardService";
+import type { GeneratorOptions, StrengthResult } from "../../vault/types/vault.types";
 import styles from "./ImportDocumentModal.module.css";
 
 interface ImportDocumentModalProps {
@@ -23,8 +29,82 @@ const ImportDocumentModal: React.FC<ImportDocumentModalProps> = ({
   } | null>(null);
   const [documentName, setDocumentName] = useState("");
   const [hasPassword, setHasPassword] = useState(false);
+  const [docPassword, setDocPassword] = useState("");
+  const [docPasswordConfirm, setDocPasswordConfirm] = useState("");
+  const [showDocPw, setShowDocPw] = useState(false);
+  const [showDocPwConfirm, setShowDocPwConfirm] = useState(false);
   const [importing, setImporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // ── Password strength ──────────────────────────────────────────────────
+  const [strength, setStrength] = useState<StrengthResult | null>(null);
+
+  useEffect(() => {
+    if (!hasPassword || !docPassword) {
+      setStrength(null);
+      return;
+    }
+    // Debounce the strength call so it doesn't fire on every keystroke
+    const timer = setTimeout(async () => {
+      try {
+        const s = await estimatePasswordStrength(docPassword);
+        setStrength(s);
+      } catch {
+        setStrength(null);
+      }
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [docPassword, hasPassword]);
+
+  // ── Password generator ─────────────────────────────────────────────────
+  const [showGenerator, setShowGenerator] = useState(false);
+  const [genOptions, setGenOptions] = useState<GeneratorOptions>({
+    length: 20,
+    include_lowercase: true,
+    include_uppercase: true,
+    include_numbers: true,
+    include_symbols: true,
+  });
+  const [generatedPw, setGeneratedPw] = useState("");
+  const [genStrength, setGenStrength] = useState<StrengthResult | null>(null);
+  const [genCopied, setGenCopied] = useState(false);
+
+  const generate = useCallback(async () => {
+    try {
+      const pw = await genPw(genOptions);
+      setGeneratedPw(pw);
+      setGenCopied(false);
+      try {
+        const s = await estimatePasswordStrength(pw);
+        setGenStrength(s);
+      } catch {
+        setGenStrength(null);
+      }
+    } catch {
+      setGeneratedPw("");
+      setGenStrength(null);
+    }
+  }, [genOptions]);
+
+  // Auto-generate when generator opens or options change
+  useEffect(() => {
+    if (showGenerator) generate();
+  }, [showGenerator, generate]);
+
+  const handleUseGenerated = () => {
+    if (!generatedPw) return;
+    setDocPassword(generatedPw);
+    setDocPasswordConfirm(generatedPw);
+    setShowGenerator(false);
+  };
+
+  const handleCopyGenerated = async () => {
+    if (!generatedPw) return;
+    await navigator.clipboard.writeText(generatedPw);
+    scheduleClipboardClear();
+    setGenCopied(true);
+    setTimeout(() => setGenCopied(false), 2000);
+  };
 
   // ── File picker via Tauri dialog ───────────────────────────────────────
 
@@ -69,18 +149,40 @@ const ImportDocumentModal: React.FC<ImportDocumentModalProps> = ({
     if (!selectedFile) return;
     const name = documentName.trim() || selectedFile.name;
 
+    // Validate password fields if password protection is enabled
+    if (hasPassword) {
+      if (!docPassword) {
+        setError("Please enter a document password.");
+        return;
+      }
+      if (docPassword.length < 4) {
+        setError("Document password must be at least 4 characters.");
+        return;
+      }
+      if (docPassword !== docPasswordConfirm) {
+        setError("Passwords do not match.");
+        return;
+      }
+    }
+
     setImporting(true);
     setError(null);
 
     try {
-      await importDocument(selectedFile.path, name, hasPassword, chunkSizeMb);
+      await importDocument(
+        selectedFile.path,
+        name,
+        hasPassword,
+        chunkSizeMb,
+        hasPassword ? docPassword : undefined
+      );
       onImported();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
       setImporting(false);
     }
-  }, [selectedFile, documentName, hasPassword, chunkSizeMb, onImported]);
+  }, [selectedFile, documentName, hasPassword, docPassword, docPasswordConfirm, chunkSizeMb, onImported]);
 
   // ── Render ─────────────────────────────────────────────────────────────
 
@@ -175,15 +277,263 @@ const ImportDocumentModal: React.FC<ImportDocumentModalProps> = ({
             id="doc-has-pw"
             type="checkbox"
             checked={hasPassword}
-            onChange={(e) => setHasPassword(e.target.checked)}
+            onChange={(e) => {
+              setHasPassword(e.target.checked);
+              if (!e.target.checked) {
+                setDocPassword("");
+                setDocPasswordConfirm("");
+              }
+            }}
           />
           <label
             htmlFor="doc-has-pw"
             className={styles.checkLabel}
           >
-            Document is password-protected (e.g. encrypted PDF)
+            Add password protection to this document
           </label>
         </div>
+
+        {/* Password fields — shown when checkbox is checked */}
+        {hasPassword && (
+          <div className={styles.passwordSection}>
+            <div className={styles.field}>
+              <label className={styles.label} htmlFor="doc-pw">
+                Document password
+              </label>
+              <div className={styles.inputWrapper}>
+                <input
+                  id="doc-pw"
+                  type={showDocPw ? "text" : "password"}
+                  className={styles.input}
+                  placeholder="Enter password…"
+                  value={docPassword}
+                  onChange={(e) => setDocPassword(e.target.value)}
+                  autoComplete="new-password"
+                />
+                <button
+                  type="button"
+                  className={styles.passwordToggle}
+                  onClick={() => setShowDocPw((v) => !v)}
+                  tabIndex={-1}
+                  aria-label={showDocPw ? "Hide password" : "Show password"}
+                >
+                  {showDocPw ? (
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+                      <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+                      <line x1="1" y1="1" x2="23" y2="23"/>
+                    </svg>
+                  ) : (
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                      <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Password strength meter */}
+            {strength && docPassword && (
+              <div className={styles.strengthMeter}>
+                <div className={styles.strengthBars}>
+                  {[0, 1, 2, 3, 4].map((i) => (
+                    <div
+                      key={i}
+                      className={styles.strengthBar}
+                      style={{
+                        backgroundColor:
+                          i <= strength.score
+                            ? ["#ef4444", "#f97316", "#eab308", "#22c55e", "#16a34a"][strength.score]
+                            : "var(--bg-tertiary, #333)",
+                      }}
+                    />
+                  ))}
+                </div>
+                <span
+                  className={styles.strengthLabel}
+                  style={{
+                    color: ["#ef4444", "#f97316", "#eab308", "#22c55e", "#16a34a"][strength.score],
+                  }}
+                >
+                  {["Very Weak", "Weak", "Fair", "Strong", "Very Strong"][strength.score]}
+                  {" "}({Math.round(strength.entropy_bits)} bits)
+                </span>
+              </div>
+            )}
+
+            <div className={styles.field}>
+              <label className={styles.label} htmlFor="doc-pw-confirm">
+                Confirm password
+              </label>
+              <div className={styles.inputWrapper}>
+                <input
+                  id="doc-pw-confirm"
+                  type={showDocPwConfirm ? "text" : "password"}
+                  className={styles.input}
+                  placeholder="Re-enter password…"
+                  value={docPasswordConfirm}
+                  onChange={(e) => setDocPasswordConfirm(e.target.value)}
+                  autoComplete="new-password"
+                />
+                <button
+                  type="button"
+                  className={styles.passwordToggle}
+                  onClick={() => setShowDocPwConfirm((v) => !v)}
+                  tabIndex={-1}
+                  aria-label={showDocPwConfirm ? "Hide password" : "Show password"}
+                >
+                  {showDocPwConfirm ? (
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+                      <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+                      <line x1="1" y1="1" x2="23" y2="23"/>
+                    </svg>
+                  ) : (
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                      <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                  )}
+                </button>
+              </div>
+            </div>
+            <p className={styles.pwHint}>
+              This password adds a second layer of encryption. You will need both 
+              your vault master password AND this document password to open this file.
+            </p>
+
+            {/* Suggest / Generate password button */}
+            <button
+              type="button"
+              className={styles.suggestBtn}
+              onClick={() => setShowGenerator((v) => !v)}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="6" width="20" height="12" rx="2" />
+                <path d="M12 12h.01" />
+                <path d="M17 12h.01" />
+                <path d="M7 12h.01" />
+              </svg>
+              {showGenerator ? "Hide Generator" : "Suggest a Password"}
+            </button>
+
+            {/* Inline password generator panel */}
+            {showGenerator && (
+              <div className={styles.generatorPanel}>
+                <label className={styles.genSectionLabel}>Password Generator</label>
+
+                <div className={styles.genOutput}>
+                  <span className={styles.genPasswordText}>
+                    {generatedPw || "—"}
+                  </span>
+                  <div className={styles.genOutputActions}>
+                    <button type="button" className={styles.genSmallBtn} onClick={handleCopyGenerated}>
+                      {genCopied ? "✓" : "Copy"}
+                    </button>
+                    <button type="button" className={styles.genSmallBtn} onClick={handleUseGenerated}>
+                      Use
+                    </button>
+                  </div>
+                </div>
+
+                {/* Generated password strength */}
+                {genStrength && (
+                  <div className={styles.strengthMeter}>
+                    <div className={styles.strengthBars}>
+                      {[0, 1, 2, 3, 4].map((i) => (
+                        <div
+                          key={i}
+                          className={styles.strengthBar}
+                          style={{
+                            backgroundColor:
+                              i <= genStrength.score
+                                ? ["#ef4444", "#f97316", "#eab308", "#22c55e", "#16a34a"][genStrength.score]
+                                : "var(--bg-tertiary, #333)",
+                          }}
+                        />
+                      ))}
+                    </div>
+                    <span
+                      className={styles.strengthLabel}
+                      style={{
+                        color: ["#ef4444", "#f97316", "#eab308", "#22c55e", "#16a34a"][genStrength.score],
+                      }}
+                    >
+                      {["Very Weak", "Weak", "Fair", "Strong", "Very Strong"][genStrength.score]}
+                      {" "}({Math.round(genStrength.entropy_bits)} bits)
+                    </span>
+                  </div>
+                )}
+
+                {/* Length slider */}
+                <div className={styles.genControl}>
+                  <label className={styles.genControlLabel}>
+                    Length: <strong>{genOptions.length}</strong>
+                  </label>
+                  <input
+                    type="range"
+                    min={8}
+                    max={128}
+                    value={genOptions.length}
+                    onChange={(e) =>
+                      setGenOptions((o) => ({ ...o, length: Number(e.target.value) }))
+                    }
+                    className={styles.genSlider}
+                  />
+                </div>
+
+                {/* Character toggles */}
+                <div className={styles.genToggles}>
+                  <label className={styles.genToggle}>
+                    <input
+                      type="checkbox"
+                      checked={genOptions.include_lowercase}
+                      onChange={(e) =>
+                        setGenOptions((o) => ({ ...o, include_lowercase: e.target.checked }))
+                      }
+                    />
+                    <span>Lowercase</span>
+                  </label>
+                  <label className={styles.genToggle}>
+                    <input
+                      type="checkbox"
+                      checked={genOptions.include_uppercase}
+                      onChange={(e) =>
+                        setGenOptions((o) => ({ ...o, include_uppercase: e.target.checked }))
+                      }
+                    />
+                    <span>Uppercase</span>
+                  </label>
+                  <label className={styles.genToggle}>
+                    <input
+                      type="checkbox"
+                      checked={genOptions.include_numbers}
+                      onChange={(e) =>
+                        setGenOptions((o) => ({ ...o, include_numbers: e.target.checked }))
+                      }
+                    />
+                    <span>Numbers</span>
+                  </label>
+                  <label className={styles.genToggle}>
+                    <input
+                      type="checkbox"
+                      checked={genOptions.include_symbols}
+                      onChange={(e) =>
+                        setGenOptions((o) => ({ ...o, include_symbols: e.target.checked }))
+                      }
+                    />
+                    <span>Symbols</span>
+                  </label>
+                </div>
+
+                <button type="button" className={styles.genRegenerateBtn} onClick={generate}>
+                  Regenerate
+                </button>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Error */}
         {error && <div className={styles.error}>{error}</div>}

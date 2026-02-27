@@ -3610,6 +3610,7 @@ dependencies = [
  "argon2",
  "chrono",
  "dirs 5.0.1",
+ "open",
  "rand 0.8.5",
  "rusqlite",
  "serde",

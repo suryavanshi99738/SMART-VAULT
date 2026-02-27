@@ -61,6 +61,11 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({
     null
   );
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [passwordPrompt, setPasswordPrompt] = useState<SecureDocument | null>(null);
+  const [promptPassword, setPromptPassword] = useState("");
+  const [promptError, setPromptError] = useState<string | null>(null);
+  const [shakeError, setShakeError] = useState(false);
+  const [showPromptPw, setShowPromptPw] = useState(false);
 
   // ── Fetch documents ────────────────────────────────────────────────────
 
@@ -82,13 +87,14 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({
 
   // ── Open document ──────────────────────────────────────────────────────
 
-  const handleOpen = useCallback(async (doc: SecureDocument) => {
+  const doOpen = useCallback(async (doc: SecureDocument, password?: string) => {
     setActionLoading(doc.id);
+    setError(null); // Clear any previous error
     try {
-      const tempPath = await openDocument(doc.id);
-      // Use Tauri's opener to open with default OS application
-      const { openPath } = await import("@tauri-apps/plugin-opener");
-      await openPath(tempPath);
+      const tempPath = await openDocument(doc.id, password);
+      // The Rust command decrypts the file AND opens it with the OS default
+      // handler (via the `open` crate), bypassing Tauri plugin scope entirely.
+      // We only need the returned tempPath for scheduled cleanup below.
       // Schedule cleanup after a reasonable delay (user may still be viewing)
       setTimeout(async () => {
         try {
@@ -98,11 +104,64 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({
         }
       }, 60_000);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : String(err));
+      const msg = err instanceof Error ? err.message : String(err);
+      // Simplify cryptic Rust authentication errors to a user-friendly message
+      if (msg.toLowerCase().includes("authentication failed") || msg.toLowerCase().includes("wrong key")) {
+        setError("Wrong password. Please try again.");
+      } else {
+        setError(msg);
+      }
     } finally {
       setActionLoading(null);
     }
   }, []);
+
+  const handleOpen = useCallback((doc: SecureDocument) => {
+    if (doc.has_password) {
+      // Show the password prompt dialog
+      setPasswordPrompt(doc);
+      setPromptPassword("");
+      setPromptError(null);
+    } else {
+      doOpen(doc);
+    }
+  }, [doOpen]);
+
+  const handlePasswordSubmit = useCallback(async () => {
+    if (!passwordPrompt) return;
+    if (!promptPassword) {
+      setPromptError("Please enter the document password.");
+      return;
+    }
+    setPromptError(null);
+    setActionLoading(passwordPrompt.id);
+    try {
+      const tempPath = await openDocument(passwordPrompt.id, promptPassword);
+      // Success — close dialog and schedule cleanup
+      setPasswordPrompt(null);
+      setPromptPassword("");
+      setShowPromptPw(false);
+      setError(null);
+      setTimeout(async () => {
+        try { await cleanupTempDocument(tempPath); } catch { /* best-effort */ }
+      }, 60_000);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (
+        msg.toLowerCase().includes("authentication failed") ||
+        msg.toLowerCase().includes("wrong key")
+      ) {
+        setPromptError("Wrong password. Please try again.");
+      } else {
+        setPromptError(msg);
+      }
+      // Trigger shake animation on the error text
+      setShakeError(true);
+      setTimeout(() => setShakeError(false), 500);
+    } finally {
+      setActionLoading(null);
+    }
+  }, [passwordPrompt, promptPassword]);
 
   // ── Delete document ────────────────────────────────────────────────────
 
@@ -345,6 +404,104 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({
                 {actionLoading === confirmDelete.id
                   ? "Deleting…"
                   : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Password prompt dialog for opening protected documents */}
+      {passwordPrompt && (
+        <div
+          className={styles.confirmOverlay}
+          onClick={() => {
+            setPasswordPrompt(null);
+            setPromptPassword("");
+            setPromptError(null);
+          }}
+        >
+          <div
+            className={styles.confirmBox}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className={styles.confirmTitle}>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                style={{ verticalAlign: "text-bottom", marginRight: 6 }}
+              >
+                <rect x="3" y="11" width="18" height="11" rx="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+              Document Password Required
+            </h3>
+            <p className={styles.confirmText}>
+              &ldquo;{passwordPrompt.name}&rdquo; is password-protected.
+              Enter the document password to decrypt and open it.
+            </p>
+            <div className={styles.passwordInputWrapper}>
+              <input
+                type={showPromptPw ? "text" : "password"}
+                className={styles.passwordInput}
+                placeholder="Enter document password…"
+                value={promptPassword}
+                onChange={(e) => setPromptPassword(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handlePasswordSubmit();
+                }}
+                autoFocus
+                autoComplete="off"
+              />
+              <button
+                type="button"
+                className={styles.passwordToggle}
+                onClick={() => setShowPromptPw((v) => !v)}
+                tabIndex={-1}
+                aria-label={showPromptPw ? "Hide password" : "Show password"}
+              >
+                {showPromptPw ? (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+                    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+                    <line x1="1" y1="1" x2="23" y2="23"/>
+                  </svg>
+                ) : (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
+                )}
+              </button>
+            </div>
+            {promptError && (
+              <p className={`${styles.promptError}${shakeError ? " " + styles.shake : ""}`}>{promptError}</p>
+            )}
+            <div className={styles.confirmActions}>
+              <button
+                type="button"
+                className={styles.confirmCancel}
+                onClick={() => {
+                  setPasswordPrompt(null);
+                  setPromptPassword("");
+                  setPromptError(null);
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className={styles.confirmDelete}
+                style={{ background: "var(--primary-default)" }}
+                disabled={!promptPassword}
+                onClick={handlePasswordSubmit}
+              >
+                Unlock & Open
               </button>
             </div>
           </div>

@@ -1,5 +1,33 @@
 /* src/features/documents/components/ImportDocumentModal.module.css */
 
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95) translateY(8px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes expandIn {
+  from {
+    opacity: 0;
+    max-height: 0;
+    overflow: hidden;
+    transform: translateY(-6px);
+  }
+  99% {
+    overflow: hidden;
+  }
+  to {
+    opacity: 1;
+    max-height: 1200px;
+    overflow: visible;
+    transform: translateY(0);
+  }
+}
+
 .overlay {
   position: fixed;
   inset: 0;
@@ -8,6 +36,7 @@
   justify-content: center;
   background: rgba(0, 0, 0, 0.45);
   z-index: 1000;
+  animation: fadeIn 0.18s ease-out both;
 }
 
 .modal {
@@ -17,10 +46,13 @@
   padding: 28px 26px 22px;
   max-width: 440px;
   width: 92%;
+  max-height: 85vh;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 18px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  animation: scaleIn 0.24s ease-out both;
 }
 
 .title {
@@ -173,7 +205,232 @@
   cursor: pointer;
 }
 
+/* ── Password section (expand animation) ──────────────────── */
+.passwordSection {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  animation: expandIn 0.3s ease-out both;
+}
+
+/* ── Input wrapper (password + eye toggle) ────────────────── */
+.inputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.inputWrapper .input {
+  padding-right: 38px;
+}
+
+.passwordToggle {
+  position: absolute;
+  right: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: 3px;
+  transition: color 0.12s ease;
+}
+
+.passwordToggle:hover {
+  color: var(--text-primary);
+}
+
+/* ── Password strength meter ──────────────────────────────── */
+.strengthMeter {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.strengthBars {
+  display: flex;
+  gap: 3px;
+  height: 6px;
+}
+
+.strengthBar {
+  flex: 1;
+  border-radius: 3px;
+  transition: background-color 0.25s ease;
+}
+
+.strengthLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* ── Suggest password button ──────────────────────────────── */
+.suggestBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  padding: 6px 14px;
+  border: 1px dashed var(--border-default);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--primary-default);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.suggestBtn:hover {
+  border-color: var(--primary-default);
+  background: var(--bg-secondary);
+}
+
+/* ── Inline password generator panel ──────────────────────── */
+@keyframes slideDown {
+  from { opacity: 0; max-height: 0; }
+  to   { opacity: 1; max-height: 400px; }
+}
+
+.generatorPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  overflow: hidden;
+  animation: slideDown 0.28s ease-out both;
+}
+
+.genSectionLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+
+.genOutput {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  background: var(--bg-tertiary, var(--bg-primary));
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  min-height: 38px;
+}
+
+.genPasswordText {
+  flex: 1;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.8125rem;
+  color: var(--text-primary);
+  word-break: break-all;
+  user-select: all;
+}
+
+.genOutputActions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.genSmallBtn {
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  font-family: inherit;
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background-color 0.12s ease, transform 0.1s ease;
+}
+
+.genSmallBtn:hover {
+  background: var(--bg-tertiary, var(--bg-secondary));
+}
+
+.genSmallBtn:active {
+  transform: scale(0.95);
+}
+
+.genControl {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.genControlLabel {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+
+.genSlider {
+  width: 100%;
+  accent-color: var(--primary-default);
+}
+
+.genToggles {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.genToggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  user-select: none;
+}
+
+.genToggle input {
+  accent-color: var(--primary-default);
+}
+
+.genRegenerateBtn {
+  align-self: flex-start;
+  padding: 6px 16px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  font-family: inherit;
+  border: none;
+  border-radius: 4px;
+  background: var(--primary-default);
+  color: #fff;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.1s ease;
+}
+
+.genRegenerateBtn:hover {
+  background: var(--primary-hover);
+}
+
+.genRegenerateBtn:active {
+  transform: scale(0.96);
+}
+
 /* ── Error & progress ─────────────────────────────────────── */
+.pwHint {
+  margin: -6px 0 0;
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  opacity: 0.85;
+}
+
 .error {
   font-size: 0.8125rem;
   color: var(--error, #dc2626);
@@ -225,4 +482,18 @@
 .submitBtn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* ── Reduced motion ───────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .overlay, .modal, .passwordSection, .generatorPanel {
+    animation-duration: 0.01ms !important;
+  }
+}
+
+body.reduce-motion .overlay,
+body.reduce-motion .modal,
+body.reduce-motion .passwordSection,
+body.reduce-motion .generatorPanel {
+  animation-duration: 0.01ms !important;
 }

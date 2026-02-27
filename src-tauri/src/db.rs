@@ -92,12 +92,16 @@ pub fn init_db() -> Result<(), String> {
             original_extension  TEXT NOT NULL DEFAULT '',
             size                INTEGER NOT NULL,
             has_password        INTEGER NOT NULL DEFAULT 0,
+            password_salt       TEXT,
             created_at          INTEGER NOT NULL,
             updated_at          INTEGER NOT NULL
         )",
         [],
     )
     .map_err(|e| format!("Documents schema migration failed: {e}"))?;
+
+    // Migration: add password_salt column for existing databases
+    let _ = conn.execute("ALTER TABLE documents ADD COLUMN password_salt TEXT", []);
 
     let mut guard = DB.lock().map_err(|_| "DB lock poisoned.".to_string())?;
     *guard = Some(conn);
@@ -228,13 +232,14 @@ pub fn insert_document(
     original_extension: &str,
     size: u64,
     has_password: bool,
+    password_salt: Option<&str>,
     created_at: i64,
 ) -> Result<(), String> {
     with_db(|conn| {
         conn.execute(
-            "INSERT INTO documents (id, name, encrypted_file_name, original_extension, size, has_password, created_at, updated_at)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
-            params![id, name, encrypted_file_name, original_extension, size, has_password as i32, created_at, created_at],
+            "INSERT INTO documents (id, name, encrypted_file_name, original_extension, size, has_password, password_salt, created_at, updated_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
+            params![id, name, encrypted_file_name, original_extension, size, has_password as i32, password_salt, created_at, created_at],
         )
         .map_err(|e| format!("Insert document failed: {e}"))?;
         Ok(())
@@ -269,6 +274,45 @@ pub fn get_document(id: &str) -> Result<Option<SecureDocument>, String> {
 
         match rows.next() {
             Some(Ok(doc)) => Ok(Some(doc)),
+            Some(Err(e)) => Err(format!("Row read failed: {e}")),
+            None => Ok(None),
+        }
+    })
+}
+
+/// Retrieve a single document by ID, including the password_salt.
+/// Returns (SecureDocument, Option<password_salt_hex>).
+pub fn get_document_with_salt(id: &str) -> Result<Option<(SecureDocument, Option<String>)>, String> {
+    with_db(|conn| {
+        let mut stmt = conn
+            .prepare(
+                "SELECT id, name, encrypted_file_name, original_extension, size, has_password, created_at, updated_at, password_salt
+                 FROM documents WHERE id = ?1",
+            )
+            .map_err(|e| format!("Query prepare failed: {e}"))?;
+
+        let mut rows = stmt
+            .query_map(params![id], |row| {
+                let has_pw: i32 = row.get(5)?;
+                let salt: Option<String> = row.get(8)?;
+                Ok((
+                    SecureDocument {
+                        id: row.get(0)?,
+                        name: row.get(1)?,
+                        encrypted_file_name: row.get(2)?,
+                        original_extension: row.get(3)?,
+                        size: row.get(4)?,
+                        has_password: has_pw != 0,
+                        created_at: row.get(6)?,
+                        updated_at: row.get(7)?,
+                    },
+                    salt,
+                ))
+            })
+            .map_err(|e| format!("Query failed: {e}"))?;
+
+        match rows.next() {
+            Some(Ok(pair)) => Ok(Some(pair)),
             Some(Err(e)) => Err(format!("Row read failed: {e}")),
             None => Ok(None),
         }

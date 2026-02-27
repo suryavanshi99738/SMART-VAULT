@@ -11,10 +11,13 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 use crate::{db, document_crypto, secure_wipe, state::VaultState};
+use argon2::{Algorithm, Argon2, Params, Version};
+use rand::RngCore;
 use serde::{Deserialize, Serialize};
 use std::{path::PathBuf, sync::Mutex};
 use tauri::State;
 use uuid::Uuid;
+use zeroize::Zeroize;
 
 // ── DTOs ───────────────────────────────────────────────────────────────────────
 
@@ -37,6 +40,59 @@ pub struct DocumentProgress {
     pub current_chunk: u64,
     pub total_chunks: u64,
     pub percent: f64,
+}
+
+// ── Document-level password key derivation ─────────────────────────────────────
+
+/// Argon2id params for document passwords (lighter than vault-level for UX):
+/// 32 MiB memory, 2 iterations, 2 parallel lanes → 256-bit output.
+const DOC_ARGON2_M_COST: u32 = 32768; // KiB
+const DOC_ARGON2_T_COST: u32 = 2;
+const DOC_ARGON2_P_COST: u32 = 2;
+
+/// Generate a random 32-byte salt for a document password.
+fn generate_doc_salt() -> Vec<u8> {
+    let mut salt = vec![0u8; 32];
+    rand::thread_rng().fill_bytes(&mut salt);
+    salt
+}
+
+/// Derive a 256-bit key from a document password + salt using Argon2id.
+fn derive_doc_key(password: &str, salt: &[u8]) -> Result<Vec<u8>, String> {
+    let params = Params::new(DOC_ARGON2_M_COST, DOC_ARGON2_T_COST, DOC_ARGON2_P_COST, Some(32))
+        .map_err(|e| format!("Argon2 param error: {e}"))?;
+    let argon2 = Argon2::new(Algorithm::Argon2id, Version::V0x13, params);
+    let mut key = vec![0u8; 32];
+    argon2
+        .hash_password_into(password.as_bytes(), salt, &mut key)
+        .map_err(|e| format!("Document key derivation failed: {e}"))?;
+    Ok(key)
+}
+
+/// Combine vault key with document-password-derived key via XOR.
+/// Result: both the vault master key AND the document password are required.
+fn combine_keys(vault_key: &[u8], doc_key: &[u8]) -> Vec<u8> {
+    vault_key
+        .iter()
+        .zip(doc_key.iter())
+        .map(|(a, b)| a ^ b)
+        .collect()
+}
+
+/// Encode bytes as hex string for DB storage.
+fn hex_encode(bytes: &[u8]) -> String {
+    bytes.iter().map(|b| format!("{b:02x}")).collect()
+}
+
+/// Decode hex string back to bytes.
+fn hex_decode(hex: &str) -> Result<Vec<u8>, String> {
+    if hex.len() % 2 != 0 {
+        return Err("Invalid hex string length.".into());
+    }
+    (0..hex.len())
+        .step_by(2)
+        .map(|i| u8::from_str_radix(&hex[i..i + 2], 16).map_err(|e| format!("Hex decode error: {e}")))
+        .collect()
 }
 
 // ── Path safety ────────────────────────────────────────────────────────────────
@@ -80,16 +136,40 @@ pub fn import_document(
     source_path: String,
     document_name: String,
     has_password: bool,
+    document_password: Option<String>,
     chunk_size: u32,
     vault_state: State<'_, Mutex<VaultState>>,
 ) -> Result<SecureDocument, String> {
     validate_filename(&document_name)?;
-    let key = get_key(&vault_state)?;
+    let mut vault_key = get_key(&vault_state)?;
 
     let src = PathBuf::from(&source_path);
     if !src.exists() {
         return Err("Source file does not exist.".into());
     }
+
+    // If document password is provided, derive a combined key
+    let mut password_salt_hex: Option<String> = None;
+    let encryption_key = if has_password {
+        let doc_pw = document_password
+            .as_deref()
+            .filter(|p| !p.is_empty())
+            .ok_or_else(|| "Password is required when password protection is enabled.".to_string())?;
+
+        let salt = generate_doc_salt();
+        let mut doc_key = derive_doc_key(doc_pw, &salt)?;
+        let combined = combine_keys(&vault_key, &doc_key);
+        password_salt_hex = Some(hex_encode(&salt));
+
+        // Zeroize intermediate keys
+        doc_key.zeroize();
+        combined
+    } else {
+        vault_key.clone()
+    };
+
+    // Zeroize vault key since we have the encryption key now
+    vault_key.zeroize();
 
     let id = Uuid::new_v4().to_string();
     let encrypted_file_name = format!("{id}.vaultbin");
@@ -99,16 +179,16 @@ pub fn import_document(
 
     // Encrypt the file
     let header = document_crypto::encrypt_file_chunked(
-        &key,
+        &encryption_key,
         &src,
         &output_path,
         chunk_size,
-        None, // Progress via events would require AppHandle — keeping simple for commands
+        None,
     )?;
 
     let now = now_ts()?;
 
-    // Store metadata in DB
+    // Store metadata in DB (including password salt if present)
     db::insert_document(
         &id,
         &document_name,
@@ -116,6 +196,7 @@ pub fn import_document(
         &header.original_extension,
         header.file_size,
         has_password,
+        password_salt_hex.as_deref(),
         now,
     )?;
 
@@ -136,12 +217,34 @@ pub fn import_document(
 #[tauri::command]
 pub fn open_document(
     document_id: String,
+    document_password: Option<String>,
     vault_state: State<'_, Mutex<VaultState>>,
 ) -> Result<String, String> {
-    let key = get_key(&vault_state)?;
+    let mut vault_key = get_key(&vault_state)?;
 
-    let doc = db::get_document(&document_id)?
+    let (doc, password_salt) = db::get_document_with_salt(&document_id)?
         .ok_or_else(|| format!("Document '{document_id}' not found."))?;
+
+    // Build the decryption key: vault key (XOR) doc-password-derived key
+    let decryption_key = if doc.has_password {
+        let doc_pw = document_password
+            .as_deref()
+            .filter(|p| !p.is_empty())
+            .ok_or_else(|| "This document requires a password to open.".to_string())?;
+
+        let salt_hex = password_salt
+            .ok_or_else(|| "Document is corrupted: missing password salt.".to_string())?;
+        let salt = hex_decode(&salt_hex)?;
+
+        let mut doc_key = derive_doc_key(doc_pw, &salt)?;
+        let combined = combine_keys(&vault_key, &doc_key);
+        doc_key.zeroize();
+        combined
+    } else {
+        vault_key.clone()
+    };
+
+    vault_key.zeroize();
 
     let docs_dir = document_crypto::documents_dir()?;
     let encrypted_path = docs_dir.join(&doc.encrypted_file_name);
@@ -161,7 +264,21 @@ pub fn open_document(
     let temp_path = temp_dir.join(&temp_name);
 
     // Decrypt
-    document_crypto::decrypt_file_chunked(&key, &encrypted_path, &temp_path, None)?;
+    document_crypto::decrypt_file_chunked(&decryption_key, &encrypted_path, &temp_path, None)?;
+
+    // Security: validate the temp path is strictly inside our allowed directory.
+    if !temp_path.starts_with(&temp_dir) {
+        let _ = std::fs::remove_file(&temp_path);
+        return Err("Path traversal detected in temp output.".into());
+    }
+
+    // Open the decrypted file with the OS default handler.
+    // We use the `open` crate (ShellExecuteW on Windows, xdg-open on Linux,
+    // `open` on macOS) to bypass Tauri's opener-plugin scope restrictions
+    // entirely. This eliminates all scope-pattern / path-prefix / backslash
+    // mismatch issues that plague the frontend openPath() approach.
+    open::that(&temp_path)
+        .map_err(|e| format!("Failed to open document with default application: {e}"))?;
 
     Ok(temp_path.to_string_lossy().to_string())
 }

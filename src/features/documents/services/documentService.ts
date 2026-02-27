@@ -15,14 +15,16 @@ async function tauriInvoke<T>(
  * Import and encrypt a file into the document vault.
  * @param sourcePath  Absolute path of the source file on disk.
  * @param documentName  User-provided display name.
- * @param hasPassword  Whether the document itself is password-protected.
+ * @param hasPassword  Whether to add document-level password protection.
  * @param chunkSizeMb  Encryption chunk size in megabytes (0 = default 4 MB).
+ * @param documentPassword  Password for document-level encryption (required if hasPassword).
  */
 export async function importDocument(
   sourcePath: string,
   documentName: string,
   hasPassword: boolean = false,
-  chunkSizeMb: number = 0
+  chunkSizeMb: number = 0,
+  documentPassword?: string
 ): Promise<SecureDocument> {
   // Convert MB → bytes for the Rust command (0 = let Rust use default)
   const chunkSize = chunkSizeMb > 0 ? chunkSizeMb * 1024 * 1024 : 0;
@@ -30,16 +32,23 @@ export async function importDocument(
     sourcePath,
     documentName,
     hasPassword,
+    documentPassword: hasPassword ? documentPassword : null,
     chunkSize,
   });
 }
 
 /**
- * Decrypt a document to a temp file and return the temp path.
- * Caller must eventually call `cleanupTempDocument` with the returned path.
+ * Decrypt a document to a temp file, open with OS default app, and return the temp path.
+ * For password-protected docs, caller must provide the document password.
  */
-export async function openDocument(documentId: string): Promise<string> {
-  return tauriInvoke<string>("open_document", { documentId });
+export async function openDocument(
+  documentId: string,
+  documentPassword?: string
+): Promise<string> {
+  return tauriInvoke<string>("open_document", {
+    documentId,
+    documentPassword: documentPassword || null,
+  });
 }
 
 /** Securely wipe a temporary decrypted file. */
