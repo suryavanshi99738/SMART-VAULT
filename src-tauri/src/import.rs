@@ -236,7 +236,7 @@ pub fn import_csv_entries(
     // 2. Get vault key
     let vault_key = {
         let guard = vault_state.lock().map_err(|_| "State lock poisoned.")?;
-        guard.key().map(|k| k.to_vec())?
+        guard.key()?.duplicate()
     };
 
     // 3. Insert selected entries
@@ -252,7 +252,7 @@ pub fn import_csv_entries(
             continue;
         }
 
-        let encrypted = crypto::encrypt_password(&vault_key, &entry.password)?;
+        let encrypted = crypto::encrypt_password(vault_key.as_bytes(), &entry.password)?;
         entry.password.zeroize();
 
         let id = Uuid::new_v4().to_string();

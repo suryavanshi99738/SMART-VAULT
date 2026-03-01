@@ -8,6 +8,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 use serde::Serialize;
+use zeroize::Zeroizing;
 
 // ── Password strength estimation ───────────────────────────────────────────────
 
@@ -31,6 +32,7 @@ pub struct StrengthResult {
 /// - Repetition penalty
 #[tauri::command]
 pub fn estimate_password_strength(password: String) -> Result<StrengthResult, String> {
+    let password = Zeroizing::new(password);
     if password.is_empty() {
         return Ok(StrengthResult {
             entropy_bits: 0.0,

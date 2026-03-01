@@ -39,7 +39,7 @@ use rand::RngCore;
 use serde::{Deserialize, Serialize};
 use std::{fs, sync::Mutex};
 use tauri::State;
-use zeroize::Zeroize;
+use zeroize::{Zeroize, Zeroizing};
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -77,10 +77,11 @@ pub fn export_vault(
     file_path: String,
     vault_state: State<'_, Mutex<VaultState>>,
 ) -> Result<String, String> {
+    let master_password = Zeroizing::new(master_password);
     // 1. Get the live vault key to decrypt entries
     let vault_key = {
         let guard = vault_state.lock().map_err(|_| "State lock poisoned.")?;
-        guard.key().map(|k| k.to_vec())?
+        guard.key()?.duplicate()
     };
 
     // 2. Decrypt all entries into BackupEntry structs
@@ -90,7 +91,7 @@ pub fn export_vault(
     for entry in &entries {
         let raw = db::base64_decode(&entry.encrypted_password)
             .map_err(|e| format!("Base64 decode error ({}): {e}", entry.id))?;
-        let password = crypto::decrypt_password(&vault_key, &raw)?;
+        let password = crypto::decrypt_password(vault_key.as_bytes(), &raw)?;
 
         backup.push(BackupEntry {
             id: entry.id.clone(),
@@ -112,10 +113,10 @@ pub fn export_vault(
     // 4. Derive a *separate* encryption key from the master password + fresh salt
     let mut salt = [0u8; SALT_LEN];
     rand::thread_rng().fill_bytes(&mut salt);
-    let mut backup_key = crypto::derive_key(&master_password, &salt)?;
+    let backup_key = crypto::derive_key(&master_password, &salt)?;
 
     // 5. AES-256-GCM encrypt
-    let cipher = Aes256Gcm::new_from_slice(&backup_key)
+    let cipher = Aes256Gcm::new_from_slice(backup_key.as_bytes())
         .map_err(|e| format!("Cipher init: {e}"))?;
     let mut nonce_bytes = [0u8; NONCE_LEN];
     rand::thread_rng().fill_bytes(&mut nonce_bytes);
@@ -127,7 +128,7 @@ pub fn export_vault(
 
     // 6. Zeroize sensitive buffers
     json_bytes.zeroize();
-    backup_key.zeroize();
+    // backup_key and vault_key auto-zeroize on drop (VaultKey)
     for entry in &mut backup {
         entry.password.zeroize();
     }
@@ -160,6 +161,7 @@ pub fn import_vault(
     file_path: String,
     vault_state: State<'_, Mutex<VaultState>>,
 ) -> Result<u32, String> {
+    let master_password = Zeroizing::new(master_password);
     // 1. Read file
     let data = fs::read(&file_path)
         .map_err(|e| format!("Cannot read backup file: {e}"))?;
@@ -184,10 +186,10 @@ pub fn import_vault(
     let ciphertext = &data[HEADER_LEN..];
 
     // 4. Derive key
-    let mut backup_key = crypto::derive_key(&master_password, salt)?;
+    let backup_key = crypto::derive_key(&master_password, salt)?;
 
     // 5. Decrypt
-    let cipher = Aes256Gcm::new_from_slice(&backup_key)
+    let cipher = Aes256Gcm::new_from_slice(backup_key.as_bytes())
         .map_err(|e| format!("Cipher init: {e}"))?;
     let nonce = Nonce::from_slice(nonce_bytes);
 
@@ -195,7 +197,7 @@ pub fn import_vault(
         .decrypt(nonce, ciphertext)
         .map_err(|_| "Decryption failed — wrong password or corrupted file.".to_string())?;
 
-    backup_key.zeroize();
+    // backup_key auto-zeroized on drop (VaultKey)
 
     // 6. Deserialise
     let mut entries: Vec<BackupEntry> = serde_json::from_slice(&plaintext)
@@ -206,7 +208,7 @@ pub fn import_vault(
     // 7. Get the *current* vault encryption key to re-encrypt entries
     let vault_key = {
         let guard = vault_state.lock().map_err(|_| "State lock poisoned.")?;
-        guard.key().map(|k| k.to_vec())?
+        guard.key()?.duplicate()
     };
 
     // 8. Delete existing entries, then insert new ones
@@ -217,7 +219,7 @@ pub fn import_vault(
 
     let mut imported = 0u32;
     for entry in &mut entries {
-        let encrypted = crypto::encrypt_password(&vault_key, &entry.password)?;
+        let encrypted = crypto::encrypt_password(vault_key.as_bytes(), &entry.password)?;
         db::insert_entry(
             &entry.id,
             &entry.service_name,

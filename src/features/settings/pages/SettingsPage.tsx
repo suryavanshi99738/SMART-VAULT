@@ -5,10 +5,15 @@ import type { ThemeMode } from "../../../app/context/ThemeContext";
 import type { AppSettings } from "../types/settings.types";
 import { exportVault, importVault } from "../backupService";
 import {
+  exportVaultBackup,
+  importVaultBackup,
+} from "../../vault/services/multiVaultService";
+import {
   registerGlobalShortcut,
   unregisterGlobalShortcut,
 } from "../shortcutService";
 import CsvImportModal from "../components/CsvImportModal";
+import ReportSection from "../components/ReportSection";
 import styles from "./SettingsPage.module.css";
 
 const themeOptions: { value: ThemeMode; label: string; desc: string }[] = [
@@ -42,6 +47,9 @@ interface SettingsPageProps {
   settings: AppSettings;
   onSettingsChange: (updated: AppSettings) => void;
   masterPassword?: string;
+  activeVaultId?: string | null;
+  activeVaultName?: string;
+  onSwitchVault?: () => void;
 }
 
 // ── Toggle switch ──────────────────────────────────────────────────────────────
@@ -81,6 +89,9 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
   settings,
   onSettingsChange,
   masterPassword,
+  activeVaultId,
+  activeVaultName,
+  onSwitchVault,
 }) => {
   const { mode, setMode } = useTheme();
   const [local, setLocal] = useState<AppSettings>(settings);
@@ -170,6 +181,69 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
       setBackupStatus({
         type: "success",
         msg: `Successfully restored ${count} ${count === 1 ? "entry" : "entries"}.`,
+      });
+    } catch (err: unknown) {
+      setBackupStatus({
+        type: "error",
+        msg: err instanceof Error ? err.message : String(err),
+      });
+    }
+  }, [masterPassword]);
+
+  // ── Backup v2 (.smartbackup) export ────────────────────────────────────────
+  const handleExportV2 = useCallback(async () => {
+    try {
+      const { save } = await import("@tauri-apps/plugin-dialog");
+      const filePath = await save({
+        title: "Export Vault Backup (.smartbackup)",
+        defaultPath: `smart-vault-backup.smartbackup`,
+        filters: [{ name: "Smart Backup", extensions: ["smartbackup"] }],
+      });
+      if (!filePath) return;
+
+      const timestamp = await exportVaultBackup(
+        filePath,
+        activeVaultName || "Smart Vault",
+        masterPassword || undefined
+      );
+      update({ last_backup_date: timestamp });
+      setBackupStatus({
+        type: "success",
+        msg: "Encrypted backup exported successfully.",
+      });
+    } catch (err: unknown) {
+      setBackupStatus({
+        type: "error",
+        msg: err instanceof Error ? err.message : String(err),
+      });
+    }
+  }, [masterPassword, activeVaultName, update]);
+
+  // ── Backup v2 (.smartbackup) import ────────────────────────────────────────
+  const handleImportV2 = useCallback(async () => {
+    try {
+      const { open, ask } = await import("@tauri-apps/plugin-dialog");
+      const filePath = await open({
+        title: "Import Vault Backup (.smartbackup)",
+        filters: [{ name: "Smart Backup", extensions: ["smartbackup"] }],
+        multiple: false,
+        directory: false,
+      });
+      if (typeof filePath !== "string" || !filePath) return;
+
+      const confirmed = await ask(
+        "Importing will REPLACE all current vault entries. This action cannot be undone. Continue?",
+        { title: "Confirm Import", kind: "warning" }
+      );
+      if (!confirmed) return;
+
+      const result = await importVaultBackup(
+        filePath,
+        masterPassword || undefined
+      );
+      setBackupStatus({
+        type: "success",
+        msg: `Restored ${result.imported} ${result.imported === 1 ? "entry" : "entries"} from "${result.vault_name}".`,
       });
     } catch (err: unknown) {
       setBackupStatus({
@@ -290,9 +364,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
 
       {/* ── 🔐 Security ─────────────────────────────────── */}
       <section className={styles.section}>
-        <h3 className={styles.sectionTitle}>
-          <span className={styles.sectionIcon}>🔐</span> Security
-        </h3>
+        <h3 className={styles.sectionTitle}>Security</h3>
         <p className={styles.sectionDesc}>
           Configure auto-lock and clipboard clearing behavior.
         </p>
@@ -378,9 +450,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
 
       {/* ── 🎨 Appearance ───────────────────────────────── */}
       <section className={styles.section}>
-        <h3 className={styles.sectionTitle}>
-          <span className={styles.sectionIcon}>🎨</span> Appearance
-        </h3>
+        <h3 className={styles.sectionTitle}>Appearance</h3>
         <p className={styles.sectionDesc}>
           Choose how Smart Vault looks to you.
         </p>
@@ -466,9 +536,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
 
       {/* ── ✦ Motion & Transitions ──────────────────────── */}
       <section className={styles.section}>
-        <h3 className={styles.sectionTitle}>
-          <span className={styles.sectionIcon}>✦</span> Motion & Transitions
-        </h3>
+        <h3 className={styles.sectionTitle}>Motion & Transitions</h3>
         <p className={styles.sectionDesc}>
           Fine-tune animation behavior for accessibility and performance.
         </p>
@@ -510,9 +578,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
 
       {/* ── 🖥 Window & Behavior ────────────────────────── */}
       <section className={styles.section}>
-        <h3 className={styles.sectionTitle}>
-          <span className={styles.sectionIcon}>🖥️</span> Window & Behavior
-        </h3>
+        <h3 className={styles.sectionTitle}>Window & Behavior</h3>
         <p className={styles.sectionDesc}>
           Control how Smart Vault behaves as a desktop application.
         </p>
@@ -641,9 +707,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
 
       {/* ── 💾 Backup & Restore ─────────────────────────── */}
       <section className={styles.section}>
-        <h3 className={styles.sectionTitle}>
-          <span className={styles.sectionIcon}>💾</span> Backup & Restore
-        </h3>
+        <h3 className={styles.sectionTitle}>Backup & Restore</h3>
         <p className={styles.sectionDesc}>
           Securely export or import your vault using encrypted{" "}
           <code className={styles.code}>.svault</code> files.
@@ -733,9 +797,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
 
       {/* ── � Document Storage ─────────────────────────── */}
       <section className={styles.section}>
-        <h3 className={styles.sectionTitle}>
-          <span className={styles.sectionIcon}>📁</span> Document Storage
-        </h3>
+        <h3 className={styles.sectionTitle}>Document Storage</h3>
         <p className={styles.sectionDesc}>
           Settings for encrypted document vault behaviour.
         </p>
@@ -824,9 +886,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
 
       {/* ── �📥 Data Import ──────────────────────────────── */}
       <section className={styles.section}>
-        <h3 className={styles.sectionTitle}>
-          <span className={styles.sectionIcon}>📥</span> Data Import
-        </h3>
+        <h3 className={styles.sectionTitle}>Data Import</h3>
         <p className={styles.sectionDesc}>
           Import passwords from browser CSV exports (Chrome, Edge, Bitwarden).
         </p>
@@ -872,6 +932,102 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
           }}
         />
       )}
+
+      {/* ── Vault Management ─────────────────────────────── */}
+      <section className={styles.section}>
+        <h3 className={styles.sectionTitle}>Vault Management</h3>
+        <p className={styles.sectionDesc}>
+          Manage multiple vaults with independent master passwords.
+        </p>
+
+        {/* Current vault info */}
+        {activeVaultName && (
+          <div className={styles.settingRow}>
+            <div className={styles.settingInfo}>
+              <span className={styles.settingLabel}>Active vault</span>
+              <span className={styles.settingHint}>
+                {activeVaultName}
+                {activeVaultId ? ` (${activeVaultId.slice(0, 8)}…)` : ""}
+              </span>
+            </div>
+            <span className={styles.statusBadge}>Active</span>
+          </div>
+        )}
+
+        {/* Switch vault */}
+        <div className={styles.buttonRow}>
+          <button className={styles.actionBtn} onClick={onSwitchVault}>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <polyline points="15 3 21 3 21 9" />
+              <polyline points="9 21 3 21 3 15" />
+              <line x1="21" y1="3" x2="14" y2="10" />
+              <line x1="3" y1="21" x2="10" y2="14" />
+            </svg>
+            Switch Vault
+          </button>
+        </div>
+      </section>
+
+      {/* ── Encrypted Backup v2 (.smartbackup) ──────────── */}
+      <section className={styles.section}>
+        <h3 className={styles.sectionTitle}>Encrypted Backup (.smartbackup)</h3>
+        <p className={styles.sectionDesc}>
+          Export or import your vault as an encrypted .smartbackup file with
+          integrity verification.
+        </p>
+
+        <div className={styles.buttonRow}>
+          <button className={styles.actionBtn} onClick={handleExportV2}>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            Export Backup
+          </button>
+          <button className={styles.actionBtn} onClick={handleImportV2}>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
+            Import Backup
+          </button>
+        </div>
+      </section>
+
+      {/* ── 📩 Support & Feedback ────────────────────────── */}
+      <section className={styles.section}>
+        <h3 className={styles.sectionTitle}>Support & Feedback</h3>
+        <p className={styles.sectionDesc}>
+          Smart Vault is fully offline. We do not collect or transmit any data.
+        </p>
+
+        <ReportSection clipboardClearSeconds={local.clipboard_clear_seconds} />
+      </section>
     </div>
   );
 };

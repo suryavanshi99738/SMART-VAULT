@@ -18,6 +18,7 @@ use argon2::{
 use serde::{Deserialize, Serialize};
 use std::{fs, path::PathBuf, sync::Mutex, time::Instant};
 use tauri::State;
+use zeroize::Zeroizing;
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -27,9 +28,9 @@ const LOCKOUT_SECS: u64 = 30;
 // ── Persisted config ───────────────────────────────────────────────────────────
 
 #[derive(Debug, Serialize, Deserialize)]
-struct VaultConfig {
+pub struct VaultConfig {
     /// Argon2id PHC string (algorithm + params + salt + hash in one string)
-    master_hash: String,
+    pub master_hash: String,
 }
 
 fn config_path() -> Result<PathBuf, String> {
@@ -43,8 +44,31 @@ fn config_path() -> Result<PathBuf, String> {
     Ok(dir.join("vault_config.json"))
 }
 
+/// Config path for a specific vault.
+pub fn config_path_for_vault(vault_id: &str) -> Result<PathBuf, String> {
+    let dir = dirs::data_dir()
+        .ok_or_else(|| "Cannot resolve app-data directory.".to_string())?
+        .join("com.hp.smart-vault")
+        .join("vaults")
+        .join(vault_id);
+    if !dir.exists() {
+        fs::create_dir_all(&dir)
+            .map_err(|e| format!("Failed to create vault directory: {e}"))?;
+    }
+    Ok(dir.join("vault_config.json"))
+}
+
 fn read_config() -> Result<Option<VaultConfig>, String> {
     let path = config_path()?;
+    read_config_at(&path)
+}
+
+pub fn read_config_for_vault(vault_id: &str) -> Result<Option<VaultConfig>, String> {
+    let path = config_path_for_vault(vault_id)?;
+    read_config_at(&path)
+}
+
+fn read_config_at(path: &PathBuf) -> Result<Option<VaultConfig>, String> {
     if !path.exists() {
         return Ok(None);
     }
@@ -60,6 +84,15 @@ fn read_config() -> Result<Option<VaultConfig>, String> {
 
 fn write_config(cfg: &VaultConfig) -> Result<(), String> {
     let path = config_path()?;
+    write_config_at(&path, cfg)
+}
+
+pub fn write_config_for_vault(vault_id: &str, cfg: &VaultConfig) -> Result<(), String> {
+    let path = config_path_for_vault(vault_id)?;
+    write_config_at(&path, cfg)
+}
+
+fn write_config_at(path: &PathBuf, cfg: &VaultConfig) -> Result<(), String> {
     let json = serde_json::to_string_pretty(cfg)
         .map_err(|e| format!("Serialisation error: {e}"))?;
     fs::write(&path, json)
@@ -82,19 +115,31 @@ pub struct UnlockResult {
 // ── Commands ───────────────────────────────────────────────────────────────────
 
 /// Check whether a master password has been configured.
+/// If `vault_id` is provided, checks for that vault; otherwise uses the legacy
+/// single-vault config.
 #[tauri::command]
-pub fn check_if_master_exists() -> Result<bool, String> {
-    Ok(read_config()?.is_some())
+pub fn check_if_master_exists(vault_id: Option<String>) -> Result<bool, String> {
+    let cfg = match vault_id {
+        Some(ref id) => read_config_for_vault(id)?,
+        None => read_config()?,
+    };
+    Ok(cfg.is_some())
 }
 
 /// First-run setup: hash and persist the master password.
-/// Refuses to overwrite an existing hash. Call `check_if_master_exists` first.
+/// If `vault_id` is provided, writes to that vault's config directory.
 #[tauri::command]
-pub fn set_master_password(password: String) -> Result<bool, String> {
+pub fn set_master_password(password: String, vault_id: Option<String>) -> Result<bool, String> {
+    let password = Zeroizing::new(password);
     if password.trim().is_empty() {
         return Err("Password must not be empty.".into());
     }
-    if read_config()?.is_some() {
+
+    let existing = match vault_id {
+        Some(ref id) => read_config_for_vault(id)?,
+        None => read_config()?,
+    };
+    if existing.is_some() {
         return Err("Master password already set.".into());
     }
 
@@ -104,20 +149,29 @@ pub fn set_master_password(password: String) -> Result<bool, String> {
         .map_err(|e| format!("Hashing failed: {e}"))?
         .to_string();
 
-    write_config(&VaultConfig { master_hash: hash })?;
+    let cfg = VaultConfig { master_hash: hash };
+    match vault_id {
+        Some(ref id) => write_config_for_vault(id, &cfg)?,
+        None => write_config(&cfg)?,
+    };
     Ok(true)
 }
 
 /// Verify the supplied password, derive the AES-256 encryption key, and store
 /// it in the Tauri-managed `VaultState`. Enforces brute-force protection.
 ///
+/// If `vault_id` is provided, uses per-vault config/salt/db paths.
+/// Otherwise falls back to legacy single-vault paths.
+///
 /// On success: key is stored in state, vault is marked unlocked, DB is opened.
 /// On failure: increments attempt counter, enforces lockout when limit reached.
 #[tauri::command]
 pub fn unlock_vault(
     password: String,
+    vault_id: Option<String>,
     vault_state: State<'_, Mutex<VaultState>>,
 ) -> Result<UnlockResult, String> {
+    let password = Zeroizing::new(password);
     if password.trim().is_empty() {
         return Err("Password must not be empty.".into());
     }
@@ -142,8 +196,12 @@ pub fn unlock_vault(
     }
 
     // ── Verify hash ───────────────────────────────────────────────────────────
-    let cfg = read_config()?
-        .ok_or_else(|| "No master password configured.".to_string())?;
+    let cfg = match vault_id {
+        Some(ref id) => read_config_for_vault(id)?
+            .ok_or_else(|| "No master password configured for this vault.".to_string())?,
+        None => read_config()?
+            .ok_or_else(|| "No master password configured.".to_string())?,
+    };
 
     let parsed = PasswordHash::new(&cfg.master_hash)
         .map_err(|e| format!("Stored hash is invalid: {e}"))?;
@@ -151,7 +209,10 @@ pub fn unlock_vault(
     match Argon2::default().verify_password(password.as_bytes(), &parsed) {
         Ok(()) => {
             // ── Derive AES-256 key and store in VaultState ────────────────────
-            let salt = crypto::load_or_create_salt()?;
+            let salt = match vault_id {
+                Some(ref id) => crypto::load_or_create_salt_for_vault(id)?,
+                None => crypto::load_or_create_salt()?,
+            };
             let key = crypto::derive_key(&password, &salt)?;
 
             let mut state = vault_state
@@ -159,10 +220,15 @@ pub fn unlock_vault(
                 .map_err(|_| "State lock poisoned.".to_string())?;
 
             state.set_key(key); // also resets failed_attempts + lockout_until
+            state.active_vault_id = vault_id.clone();
 
-            // Open the DB (idempotent)
+            // Close any previously open DB, then open the correct one
             drop(state); // release lock before calling db (avoids potential deadlock)
-            db::init_db()?;
+            db::close_db()?;
+            match vault_id {
+                Some(ref id) => db::init_db_for_vault(id)?,
+                None => db::init_db()?,
+            };
 
             Ok(UnlockResult {
                 success: true,

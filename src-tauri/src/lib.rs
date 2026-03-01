@@ -1,10 +1,12 @@
 mod auth;
 mod backup;
+mod backup_v2;
 mod crypto;
 mod db;
 mod document_commands;
 mod document_crypto;
 mod import;
+mod multi_vault;
 mod secure_wipe;
 mod security;
 mod settings;
@@ -19,11 +21,15 @@ use tauri::Manager;
 
 use auth::{check_if_master_exists, lock_vault, set_master_password, unlock_vault};
 use backup::{export_vault, import_vault};
+use backup_v2::{export_vault_backup, import_vault_backup};
 use document_commands::{
     cleanup_all_temp_documents, cleanup_temp_document, delete_document, get_all_documents,
     get_document_info, import_document, open_document, secure_delete_document,
 };
 use import::{import_csv_entries, parse_csv_preview};
+use multi_vault::{
+    create_vault, delete_vault, get_active_vault_id, list_vaults, rename_vault, select_vault,
+};
 use security::{clear_clipboard, estimate_password_strength};
 use settings::{load_settings, save_settings};
 use shortcut::{register_global_shortcut, unregister_global_shortcut};
@@ -63,9 +69,12 @@ pub fn run() {
             // Global shortcut
             register_global_shortcut,
             unregister_global_shortcut,
-            // Backup
+            // Backup (legacy .svault)
             export_vault,
             import_vault,
+            // Backup v2 (.smartbackup)
+            export_vault_backup,
+            import_vault_backup,
             // CSV import
             parse_csv_preview,
             import_csv_entries,
@@ -78,6 +87,13 @@ pub fn run() {
             get_all_documents,
             get_document_info,
             secure_delete_document,
+            // Multi-vault
+            list_vaults,
+            create_vault,
+            delete_vault,
+            rename_vault,
+            select_vault,
+            get_active_vault_id,
         ])
         .setup(|app| {
             // ── System tray ────────────────────────────────────────────────

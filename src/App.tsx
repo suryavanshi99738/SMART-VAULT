@@ -1,8 +1,13 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import "./App.css";
 import Login from "./features/auth/pages/Login";
+import VaultSelector from "./features/vault/pages/VaultSelector";
 import AppShell from "./app/layout/AppShell";
 import { VaultProvider } from "./features/vault/context/VaultContext";
+import {
+  ActiveVaultProvider,
+  useActiveVault,
+} from "./features/vault/context/ActiveVaultContext";
 import { ThemeProvider } from "./app/context/ThemeContext";
 import {
   UISettingsProvider,
@@ -25,24 +30,35 @@ import type { AppSettings } from "./features/settings/types/settings.types";
 import { DEFAULT_SETTINGS } from "./features/settings/types/settings.types";
 import { ToastContainer, useToast } from "./shared/components/Toast";
 import type { SectionId } from "./app/layout/Sidebar";
+import { selectVault } from "./features/vault/services/multiVaultService";
 
-type AppView = "login" | "transitioning" | "app";
+type AppView = "vault-selector" | "login" | "transitioning" | "app";
 
 /**
  * Unlock transition duration (ms).
- * - Animations ON: clean cross-fade (~380ms)
- * - Reduced motion: opacity-only fade (~180ms)
+ * - Animations ON: premium 2-phase overlay (~420ms)
+ * - Reduced motion: opacity-only fade (~200ms)
  * - Instant unlock: 0ms
  */
-const TRANSITION_MS = 380;
-const TRANSITION_REDUCED_MS = 180;
+const TRANSITION_MS = 420;
+const TRANSITION_REDUCED_MS = 200;
 
 const AppInner: React.FC = () => {
-  const [view, setView] = useState<AppView>("login");
+  const [view, setView] = useState<AppView>("vault-selector");
   const [userName, setUserName] = useState<string>("");
   const [activeSection, setActiveSection] = useState<SectionId>("dashboard");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const masterPasswordRef = useRef<string>("");
+
+  // Active vault from context (replaces refs)
+  const {
+    currentVaultId,
+    currentVaultName,
+    vaults,
+    setVault,
+    clearVault,
+    refreshVaults,
+  } = useActiveVault();
 
   // ── Settings ───────────────────────────────────────────────
   const [settings, setSettings] = useState<AppSettings>({
@@ -86,6 +102,41 @@ const AppInner: React.FC = () => {
   // ── Toast ─────────────────────────────────────────────────────────────────
   const { toasts, showToast, dismissToast } = useToast();
 
+  // ── Startup: check vault index ────────────────────────────────────────────
+  // On mount, check if any vaults exist. If the index is empty, show the
+  // vault selector (which will prompt to create). Otherwise show selector.
+  useEffect(() => {
+    (async () => {
+      try {
+        const list = await refreshVaults();
+        if (list.length === 0) {
+          // No vaults — show selector (will auto-show create form)
+          setView("vault-selector");
+        } else if (list.length === 1) {
+          // Single vault — auto-select and go to login
+          await selectVault(list[0].id);
+          setVault(list[0].id, list[0].name);
+          setView("login");
+        } else {
+          // Multiple vaults — show selector
+          setView("vault-selector");
+        }
+      } catch {
+        setView("vault-selector");
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ── Vault selection ───────────────────────────────────────────────────────
+  const handleVaultSelected = useCallback(
+    (vaultId: string, vaultName: string) => {
+      setVault(vaultId, vaultName);
+      setView("login");
+    },
+    [setVault]
+  );
+
   // ── Lock ──────────────────────────────────────────────────────────────────
   const handleLock = useCallback(() => {
     setView("login");
@@ -93,6 +144,33 @@ const AppInner: React.FC = () => {
     setActiveSection("dashboard");
     masterPasswordRef.current = "";
   }, []);
+
+  /** Go back to vault selector (e.g. "Switch Vault"). */
+  const handleSwitchVault = useCallback(() => {
+    setView("vault-selector");
+    setUserName("");
+    setActiveSection("dashboard");
+    masterPasswordRef.current = "";
+    clearVault();
+  }, [clearVault]);
+
+  /** Quick-switch: select a different vault and go straight to its login. */
+  const handleQuickSwitchVault = useCallback(
+    async (vaultId: string, vaultName: string) => {
+      try {
+        await selectVault(vaultId);
+        setVault(vaultId, vaultName);
+        setUserName("");
+        setActiveSection("dashboard");
+        masterPasswordRef.current = "";
+        setView("login");
+      } catch {
+        // If backend select fails, fall back to selector screen
+        handleSwitchVault();
+      }
+    },
+    [setVault, handleSwitchVault]
+  );
 
   /**
    * Auto-lock triggered by a window event (minimize / focus-loss).
@@ -222,6 +300,9 @@ const AppInner: React.FC = () => {
             settings={settings}
             onSettingsChange={handleSettingsChange}
             masterPassword={masterPasswordRef.current}
+            activeVaultId={currentVaultId}
+            activeVaultName={currentVaultName}
+            onSwitchVault={handleSwitchVault}
           />
         );
       default:
@@ -241,8 +322,16 @@ const AppInner: React.FC = () => {
         animationsEnabled={settings.enable_animations}
       >
 
+      {view === "vault-selector" && (
+        <VaultSelector onVaultSelected={handleVaultSelected} />
+      )}
+
       {view === "login" && (
-        <Login onLoginSuccess={handleLoginSuccess} />
+        <Login
+          onLoginSuccess={handleLoginSuccess}
+          vaultId={currentVaultId}
+          vaultName={currentVaultName}
+        />
       )}
 
       {view === "transitioning" && (
@@ -282,6 +371,11 @@ const AppInner: React.FC = () => {
               onNavigate={setActiveSection}
               sidebarCollapsed={sidebarCollapsed}
               onToggleSidebar={toggleSidebar}
+              vaultName={currentVaultName}
+              vaults={vaults}
+              currentVaultId={currentVaultId}
+              onSwitchVault={handleSwitchVault}
+              onQuickSwitchVault={handleQuickSwitchVault}
             >
               {renderSection()}
             </AppShell>
@@ -295,7 +389,9 @@ const AppInner: React.FC = () => {
 
 const App: React.FC = () => (
   <ThemeProvider>
-    <AppInner />
+    <ActiveVaultProvider>
+      <AppInner />
+    </ActiveVaultProvider>
   </ThemeProvider>
 );
 

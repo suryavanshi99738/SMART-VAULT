@@ -21,6 +21,8 @@ use rand::RngCore;
 use std::{fs, path::PathBuf};
 use zeroize::Zeroize;
 
+use crate::state::VaultKey;
+
 /// AES-256-GCM nonce length (96 bits per NIST SP 800-38D).
 const NONCE_LEN: usize = 12;
 
@@ -35,8 +37,7 @@ const ARGON2_P_COST: u32 = 4;
 
 // ── Salt persistence ───────────────────────────────────────────────────────────
 
-/// Path to the per-installation random salt file.
-/// The salt is public (not secret) — it only ensures uniqueness of the KDF.
+/// Path to the per-installation random salt file (legacy single-vault).
 fn salt_path() -> Result<PathBuf, String> {
     let dir = dirs::data_dir()
         .ok_or_else(|| "Cannot resolve app-data directory.".to_string())?
@@ -48,9 +49,34 @@ fn salt_path() -> Result<PathBuf, String> {
     Ok(dir.join("vault.salt"))
 }
 
+/// Path to the salt file for a specific vault.
+pub fn salt_path_for_vault(vault_id: &str) -> Result<PathBuf, String> {
+    let dir = dirs::data_dir()
+        .ok_or_else(|| "Cannot resolve app-data directory.".to_string())?
+        .join("com.hp.smart-vault")
+        .join("vaults")
+        .join(vault_id);
+    if !dir.exists() {
+        fs::create_dir_all(&dir)
+            .map_err(|e| format!("Failed to create vault directory: {e}"))?;
+    }
+    Ok(dir.join("vault.salt"))
+}
+
 /// Load the existing salt or generate and persist a fresh random one.
 pub fn load_or_create_salt() -> Result<Vec<u8>, String> {
     let path = salt_path()?;
+    load_or_create_salt_at(&path)
+}
+
+/// Load or create salt for a specific vault.
+pub fn load_or_create_salt_for_vault(vault_id: &str) -> Result<Vec<u8>, String> {
+    let path = salt_path_for_vault(vault_id)?;
+    load_or_create_salt_at(&path)
+}
+
+/// Internal: load or create salt at a given path.
+fn load_or_create_salt_at(path: &PathBuf) -> Result<Vec<u8>, String> {
     if path.exists() {
         let salt = fs::read(&path)
             .map_err(|e| format!("Failed to read salt: {e}"))?;
@@ -69,15 +95,15 @@ pub fn load_or_create_salt() -> Result<Vec<u8>, String> {
 // ── Key derivation ─────────────────────────────────────────────────────────────
 
 /// Derive a 256-bit AES key from `master_password` using Argon2id.
-/// Returns the raw key bytes — the caller MUST zeroize them after use.
-pub fn derive_key(master_password: &str, salt: &[u8]) -> Result<Vec<u8>, String> {
+/// Returns a `VaultKey` that automatically zeroizes its memory on drop.
+pub fn derive_key(master_password: &str, salt: &[u8]) -> Result<VaultKey, String> {
     let params = Params::new(ARGON2_M_COST, ARGON2_T_COST, ARGON2_P_COST, Some(32))
         .map_err(|e| format!("Argon2 parameter error: {e}"))?;
     let argon2 = Argon2::new(Algorithm::Argon2id, Version::V0x13, params);
 
-    let mut key = vec![0u8; 32];
+    let mut key = VaultKey::zeroed();
     argon2
-        .hash_password_into(master_password.as_bytes(), salt, &mut key)
+        .hash_password_into(master_password.as_bytes(), salt, key.as_mut_bytes())
         .map_err(|e| format!("Key derivation failed: {e}"))?;
 
     Ok(key)
@@ -118,14 +144,17 @@ pub fn decrypt_password(key: &[u8], data: &[u8]) -> Result<String, String> {
     let cipher = Aes256Gcm::new_from_slice(key)
         .map_err(|e| format!("Cipher init failed: {e}"))?;
 
-    let mut plaintext = cipher
+    let plaintext = cipher
         .decrypt(nonce, ciphertext)
         .map_err(|_| "Decryption failed – wrong key or corrupted data.".to_string())?;
 
-    let result = String::from_utf8(plaintext.clone())
-        .map_err(|e| format!("UTF-8 decode failed: {e}"))?;
-
-    plaintext.zeroize();
-    Ok(result)
+    // Convert without cloning — String takes ownership of the Vec buffer,
+    // eliminating a second plaintext copy lingering in memory.
+    String::from_utf8(plaintext).map_err(|e| {
+        // Zeroize the byte buffer inside the error before discarding
+        let mut bytes = e.into_bytes();
+        bytes.zeroize();
+        "UTF-8 decode failed".to_string()
+    })
 }
 

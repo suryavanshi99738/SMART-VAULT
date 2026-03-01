@@ -22,8 +22,8 @@
   max-height: 90vh;
   overflow-y: auto;
   background-color: var(--bg-secondary);
-  border-radius: 4px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.14);
   animation: modalSlide var(--anim-duration-normal) ease-out;
 }
 
@@ -61,7 +61,7 @@
   height: 28px;
   padding: 0;
   border: none;
-  border-radius: 4px;
+  border-radius: 7px;
   background-color: transparent;
   color: var(--text-muted);
   font-size: 1.25rem;
@@ -107,9 +107,9 @@
   font-size: 0.875rem;
   font-family: inherit;
   color: var(--text-primary);
-  background-color: var(--bg-tertiary);
+  background-color: var(--bg-primary);
   border: 1.5px solid var(--border-default);
-  border-radius: 4px;
+  border-radius: 8px;
   outline: none;
   transition:
     border-color var(--anim-duration-fast) ease,
@@ -117,8 +117,8 @@
 }
 
 .input:focus {
-  border-color: var(--primary-default);
-  box-shadow: 0 0 0 3px var(--primary-ring);
+  border-color: var(--input-focus-border);
+  box-shadow: 0 0 0 3px var(--input-focus-ring);
 }
 
 .input::placeholder {
@@ -131,17 +131,17 @@
   font-size: 0.875rem;
   font-family: inherit;
   color: var(--text-primary);
-  background-color: var(--bg-tertiary);
+  background-color: var(--bg-primary);
   border: 1.5px solid var(--border-default);
-  border-radius: 4px;
+  border-radius: 8px;
   outline: none;
   resize: vertical;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .textarea:focus {
-  border-color: var(--primary-default);
-  box-shadow: 0 0 0 3px var(--primary-ring);
+  border-color: var(--input-focus-border);
+  box-shadow: 0 0 0 3px var(--input-focus-ring);
 }
 
 /* ── Password row ─────────────────────────────────────────── */
@@ -160,12 +160,12 @@
   font-weight: 500;
   font-family: inherit;
   border: 1.5px solid var(--border-default);
-  border-radius: 4px;
+  border-radius: 8px;
   background-color: var(--bg-secondary);
   color: var(--text-secondary);
   cursor: pointer;
   white-space: nowrap;
-  transition: background-color 0.12s ease;
+  transition: background-color 0.12s ease, border-color 0.12s ease;
 }
 
 .toggleBtn:hover {
@@ -179,13 +179,13 @@
   background: transparent;
   font-size: 0.75rem;
   font-weight: 500;
-  color: var(--primary-default);
+  color: var(--color-secondary);
   cursor: pointer;
   transition: color 0.12s ease;
 }
 
 .genToggle:hover {
-  color: var(--primary-hover);
+  color: var(--text-secondary);
 }
 
 /* ── Error ───────────────────────────────────────────────── */
@@ -209,7 +209,7 @@
   font-weight: 500;
   font-family: inherit;
   border: 1px solid var(--border-default);
-  border-radius: 4px;
+  border-radius: 8px;
   background-color: transparent;
   color: var(--text-secondary);
   cursor: pointer;
@@ -230,15 +230,17 @@
   font-weight: 600;
   font-family: inherit;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   background-color: var(--primary-default);
   color: #ffffff;
   cursor: pointer;
-  transition: background-color 0.15s ease, transform 0.1s ease;
+  box-shadow: 0 2px 8px rgba(59, 73, 83, 0.2);
+  transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
 }
 
 .saveBtn:hover:not(:disabled) {
   background-color: var(--primary-hover);
+  box-shadow: 0 4px 14px rgba(59, 73, 83, 0.3);
 }
 
 .saveBtn:active:not(:disabled) {

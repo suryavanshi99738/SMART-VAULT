@@ -1,0 +1,162 @@
+/* ── Support & Feedback Section ──────────────────────────── */
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px;
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  background-color: var(--bg-secondary);
+  transition: box-shadow 0.18s ease;
+}
+
+.card:hover {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* ── Header row (icon + text) ────────────────────────────── */
+.header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.iconWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background-color: var(--color-secondary);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(90, 120, 99, 0.2);
+}
+
+.headerText {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+.description {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+/* ── Email display ───────────────────────────────────────── */
+.emailRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  background-color: var(--bg-primary);
+}
+
+.emailIcon {
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+
+.emailAddress {
+  flex: 1;
+  font-family: "SF Mono", "Cascadia Code", "Fira Code", monospace;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: 0.01em;
+  user-select: all;
+}
+
+/* ── Action buttons ──────────────────────────────────────── */
+.actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.actionBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 18px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  font-family: inherit;
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease,
+              transform 0.1s ease, box-shadow 0.15s ease;
+}
+
+.actionBtn:hover {
+  background-color: var(--bg-tertiary);
+  border-color: var(--color-secondary);
+  transform: translateY(-1px);
+}
+
+.actionBtn:active {
+  transform: translateY(0);
+}
+
+.actionBtnPrimary {
+  background-color: var(--primary-default);
+  border-color: var(--primary-default);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(59, 73, 83, 0.22);
+}
+
+.actionBtnPrimary:hover {
+  background-color: var(--primary-hover);
+  border-color: var(--primary-hover);
+  box-shadow: 0 4px 14px rgba(59, 73, 83, 0.28);
+}
+
+/* ── Copied state ────────────────────────────────────────── */
+.actionBtnCopied {
+  background-color: var(--color-secondary);
+  border-color: var(--color-secondary);
+  color: #ffffff;
+  pointer-events: none;
+}
+
+/* ── Trust notice ────────────────────────────────────────── */
+.notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background-color: rgba(90, 120, 99, 0.08);
+  border: 1px solid rgba(90, 120, 99, 0.14);
+}
+
+.noticeIcon {
+  flex-shrink: 0;
+  color: var(--color-secondary);
+  margin-top: 1px;
+}
+
+.noticeText {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin: 0;
+}

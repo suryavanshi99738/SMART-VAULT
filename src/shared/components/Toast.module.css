@@ -16,10 +16,10 @@
   align-items: center;
   gap: 10px;
   padding: 11px 16px;
-  border-radius: 4px;
-  background-color: var(--bg-secondary, #1a1a1a);
-  border: 1px solid var(--border-default, #6e6e6e);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  border-radius: 10px;
+  background-color: var(--bg-secondary, #273136);
+  border: 1px solid var(--border-default, rgba(144,171,139,0.18));
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
   pointer-events: auto;
   min-width: 240px;
   max-width: 360px;
@@ -41,17 +41,17 @@
 }
 
 .icon[data-type="warning"] {
-  background-color: rgba(197, 200, 107, 0.15);
+  background-color: rgba(122, 100, 40, 0.14);
   color: var(--color-warning);
 }
 
 .icon[data-type="info"] {
-  background-color: rgba(140, 140, 214, 0.15);
+  background-color: rgba(59, 80, 112, 0.14);
   color: var(--color-info);
 }
 
 .icon[data-type="error"] {
-  background-color: rgba(200, 101, 101, 0.15);
+  background-color: var(--color-danger-bg, rgba(122, 64, 64, 0.14));
   color: var(--color-danger);
 }
 
@@ -63,14 +63,14 @@
 .title {
   font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--text-primary, #eaeaea);
+  color: var(--text-primary, #F1F5F2);
   line-height: 1.35;
 }
 
 .message {
   margin-top: 1px;
   font-size: 0.75rem;
-  color: var(--text-muted, #8c8c8c);
+  color: var(--text-muted, #7A9A8E);
   line-height: 1.4;
 }
 
@@ -83,9 +83,9 @@
   justify-content: center;
   border: none;
   background: transparent;
-  color: var(--text-muted, #8c8c8c);
+  color: var(--text-muted, #7A9A8E);
   cursor: pointer;
-  border-radius: 4px;
+  border-radius: 6px;
   opacity: 0.7;
   transition: opacity 0.15s ease, background-color 0.15s ease;
   padding: 0;

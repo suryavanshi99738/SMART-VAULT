@@ -10,14 +10,13 @@
 // • Path traversal is explicitly prevented.
 // ─────────────────────────────────────────────────────────────────────────────
 
-use crate::{db, document_crypto, secure_wipe, state::VaultState};
+use crate::{db, document_crypto, secure_wipe, state::{VaultState, VaultKey}};
 use argon2::{Algorithm, Argon2, Params, Version};
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
 use std::{path::PathBuf, sync::Mutex};
 use tauri::State;
 use uuid::Uuid;
-use zeroize::Zeroize;
 
 // ── DTOs ───────────────────────────────────────────────────────────────────────
 
@@ -58,25 +57,29 @@ fn generate_doc_salt() -> Vec<u8> {
 }
 
 /// Derive a 256-bit key from a document password + salt using Argon2id.
-fn derive_doc_key(password: &str, salt: &[u8]) -> Result<Vec<u8>, String> {
+/// Returns a VaultKey that auto-zeroizes on drop.
+fn derive_doc_key(password: &str, salt: &[u8]) -> Result<VaultKey, String> {
     let params = Params::new(DOC_ARGON2_M_COST, DOC_ARGON2_T_COST, DOC_ARGON2_P_COST, Some(32))
         .map_err(|e| format!("Argon2 param error: {e}"))?;
     let argon2 = Argon2::new(Algorithm::Argon2id, Version::V0x13, params);
-    let mut key = vec![0u8; 32];
+    let mut key = VaultKey::zeroed();
     argon2
-        .hash_password_into(password.as_bytes(), salt, &mut key)
+        .hash_password_into(password.as_bytes(), salt, key.as_mut_bytes())
         .map_err(|e| format!("Document key derivation failed: {e}"))?;
     Ok(key)
 }
 
 /// Combine vault key with document-password-derived key via XOR.
 /// Result: both the vault master key AND the document password are required.
-fn combine_keys(vault_key: &[u8], doc_key: &[u8]) -> Vec<u8> {
-    vault_key
-        .iter()
-        .zip(doc_key.iter())
-        .map(|(a, b)| a ^ b)
-        .collect()
+/// Returns a VaultKey that auto-zeroizes on drop.
+fn combine_keys(vault_key: &[u8], doc_key: &[u8]) -> VaultKey {
+    let mut result = [0u8; 32];
+    for (i, (&a, &b)) in vault_key.iter().zip(doc_key.iter()).enumerate() {
+        if i < 32 {
+            result[i] = a ^ b;
+        }
+    }
+    VaultKey::from_bytes(result)
 }
 
 /// Encode bytes as hex string for DB storage.
@@ -109,11 +112,12 @@ fn validate_filename(name: &str) -> Result<(), String> {
 }
 
 /// Acquire the encryption key from VaultState or fail.
-fn get_key(vault_state: &State<'_, Mutex<VaultState>>) -> Result<Vec<u8>, String> {
+/// Returns an auto-zeroizing VaultKey.
+fn get_key(vault_state: &State<'_, Mutex<VaultState>>) -> Result<VaultKey, String> {
     let guard = vault_state
         .lock()
         .map_err(|_| "VaultState mutex poisoned.".to_string())?;
-    guard.key().map(|k| k.to_vec())
+    Ok(guard.key()?.duplicate())
 }
 
 fn now_ts() -> Result<i64, String> {
@@ -141,7 +145,7 @@ pub fn import_document(
     vault_state: State<'_, Mutex<VaultState>>,
 ) -> Result<SecureDocument, String> {
     validate_filename(&document_name)?;
-    let mut vault_key = get_key(&vault_state)?;
+    let vault_key = get_key(&vault_state)?;
 
     let src = PathBuf::from(&source_path);
     if !src.exists() {
@@ -157,19 +161,17 @@ pub fn import_document(
             .ok_or_else(|| "Password is required when password protection is enabled.".to_string())?;
 
         let salt = generate_doc_salt();
-        let mut doc_key = derive_doc_key(doc_pw, &salt)?;
-        let combined = combine_keys(&vault_key, &doc_key);
+        let doc_key = derive_doc_key(doc_pw, &salt)?;
+        let combined = combine_keys(vault_key.as_bytes(), doc_key.as_bytes());
         password_salt_hex = Some(hex_encode(&salt));
 
-        // Zeroize intermediate keys
-        doc_key.zeroize();
+        // doc_key auto-zeroized on drop (VaultKey)
         combined
     } else {
-        vault_key.clone()
+        vault_key.duplicate()
     };
 
-    // Zeroize vault key since we have the encryption key now
-    vault_key.zeroize();
+    // vault_key auto-zeroized on drop (VaultKey)
 
     let id = Uuid::new_v4().to_string();
     let encrypted_file_name = format!("{id}.vaultbin");
@@ -179,7 +181,7 @@ pub fn import_document(
 
     // Encrypt the file
     let header = document_crypto::encrypt_file_chunked(
-        &encryption_key,
+        encryption_key.as_bytes(),
         &src,
         &output_path,
         chunk_size,
@@ -220,7 +222,7 @@ pub fn open_document(
     document_password: Option<String>,
     vault_state: State<'_, Mutex<VaultState>>,
 ) -> Result<String, String> {
-    let mut vault_key = get_key(&vault_state)?;
+    let vault_key = get_key(&vault_state)?;
 
     let (doc, password_salt) = db::get_document_with_salt(&document_id)?
         .ok_or_else(|| format!("Document '{document_id}' not found."))?;
@@ -236,15 +238,15 @@ pub fn open_document(
             .ok_or_else(|| "Document is corrupted: missing password salt.".to_string())?;
         let salt = hex_decode(&salt_hex)?;
 
-        let mut doc_key = derive_doc_key(doc_pw, &salt)?;
-        let combined = combine_keys(&vault_key, &doc_key);
-        doc_key.zeroize();
+        let doc_key = derive_doc_key(doc_pw, &salt)?;
+        let combined = combine_keys(vault_key.as_bytes(), doc_key.as_bytes());
+        // doc_key auto-zeroized on drop (VaultKey)
         combined
     } else {
-        vault_key.clone()
+        vault_key.duplicate()
     };
 
-    vault_key.zeroize();
+    // vault_key auto-zeroized on drop (VaultKey)
 
     let docs_dir = document_crypto::documents_dir()?;
     let encrypted_path = docs_dir.join(&doc.encrypted_file_name);
@@ -264,7 +266,7 @@ pub fn open_document(
     let temp_path = temp_dir.join(&temp_name);
 
     // Decrypt
-    document_crypto::decrypt_file_chunked(&decryption_key, &encrypted_path, &temp_path, None)?;
+    document_crypto::decrypt_file_chunked(decryption_key.as_bytes(), &encrypted_path, &temp_path, None)?;
 
     // Security: validate the temp path is strictly inside our allowed directory.
     if !temp_path.starts_with(&temp_dir) {

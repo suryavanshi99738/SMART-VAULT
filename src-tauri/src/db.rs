@@ -35,19 +35,31 @@ pub struct PasswordEntry {
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
-/// Resolve the database path inside the OS app-data directory.
-fn db_path() -> Result<PathBuf, String> {
+/// Base app-data directory for Smart Vault.
+pub fn app_data_dir() -> Result<PathBuf, String> {
     let data_dir = dirs::data_dir()
         .ok_or_else(|| "Unable to determine app data directory.".to_string())?;
-
     let app_dir = data_dir.join("com.hp.smart-vault");
-
     if !app_dir.exists() {
         fs::create_dir_all(&app_dir)
             .map_err(|e| format!("Failed to create app directory: {e}"))?;
     }
+    Ok(app_dir)
+}
 
-    Ok(app_dir.join("vault.db"))
+/// Resolve the database path for a specific vault.
+pub fn db_path_for_vault(vault_id: &str) -> Result<PathBuf, String> {
+    let vaults_dir = app_data_dir()?.join("vaults").join(vault_id);
+    if !vaults_dir.exists() {
+        fs::create_dir_all(&vaults_dir)
+            .map_err(|e| format!("Failed to create vault directory: {e}"))?;
+    }
+    Ok(vaults_dir.join("vault.db"))
+}
+
+/// Legacy fallback — resolve the single-vault database path.
+fn db_path() -> Result<PathBuf, String> {
+    Ok(app_data_dir()?.join("vault.db"))
 }
 
 // ── Initialisation ─────────────────────────────────────────────────────────────
@@ -55,6 +67,24 @@ fn db_path() -> Result<PathBuf, String> {
 /// Open (or create) the SQLite database and run migrations.
 pub fn init_db() -> Result<(), String> {
     let path = db_path()?;
+    init_db_at_path(&path)
+}
+
+/// Open (or create) the SQLite database for a specific vault.
+pub fn init_db_for_vault(vault_id: &str) -> Result<(), String> {
+    let path = db_path_for_vault(vault_id)?;
+    init_db_at_path(&path)
+}
+
+/// Close the current database connection (for vault switching).
+pub fn close_db() -> Result<(), String> {
+    let mut guard = DB.lock().map_err(|_| "DB lock poisoned.".to_string())?;
+    *guard = None;
+    Ok(())
+}
+
+/// Internal: open DB at a given path and run migrations.
+fn init_db_at_path(path: &PathBuf) -> Result<(), String> {
 
     let conn = Connection::open(&path)
         .map_err(|e| format!("Failed to open database: {e}"))?;

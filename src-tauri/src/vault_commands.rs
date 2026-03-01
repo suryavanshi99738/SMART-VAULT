@@ -10,12 +10,13 @@
 // • unlock_vault / lock_vault live in auth.rs — not here.
 // ─────────────────────────────────────────────────────────────────────────────
 
-use crate::{crypto, db, state::VaultState};
+use crate::{crypto, db, state::{VaultState, VaultKey}};
 use rand::{seq::SliceRandom, thread_rng};
 use serde::{Deserialize, Serialize};
 use std::sync::Mutex;
 use tauri::State;
 use uuid::Uuid;
+use zeroize::Zeroize;
 
 // ── Request / response DTOs ────────────────────────────────────────────────────
 
@@ -55,12 +56,12 @@ pub struct DecryptedEntry {
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 /// Lock the vault state and extract the encryption key.
-/// Returns an owned copy so the MutexGuard is released immediately.
-fn get_key(vault_state: &State<'_, Mutex<VaultState>>) -> Result<Vec<u8>, String> {
+/// Returns an owned VaultKey copy that auto-zeroizes when dropped.
+fn get_key(vault_state: &State<'_, Mutex<VaultState>>) -> Result<VaultKey, String> {
     let guard = vault_state
         .lock()
         .map_err(|_| "VaultState mutex poisoned.".to_string())?;
-    guard.key().map(|k| k.to_vec())
+    Ok(guard.key()?.duplicate())
 }
 
 // ── Commands ───────────────────────────────────────────────────────────────────
@@ -68,12 +69,13 @@ fn get_key(vault_state: &State<'_, Mutex<VaultState>>) -> Result<Vec<u8>, String
 /// Add a new password entry to the vault.
 #[tauri::command]
 pub fn add_password_entry(
-    request: AddEntryRequest,
+    mut request: AddEntryRequest,
     vault_state: State<'_, Mutex<VaultState>>,
 ) -> Result<String, String> {
     let key = get_key(&vault_state)?;
 
-    let encrypted = crypto::encrypt_password(&key, &request.password)?;
+    let encrypted = crypto::encrypt_password(key.as_bytes(), &request.password)?;
+    request.password.zeroize();
 
     let id = Uuid::new_v4().to_string();
     let now = std::time::SystemTime::now()
@@ -101,7 +103,7 @@ pub fn add_password_entry(
 /// reading the current entry first and re-writing the same bytes.
 #[tauri::command]
 pub fn update_password_entry(
-    request: UpdateEntryRequest,
+    mut request: UpdateEntryRequest,
     vault_state: State<'_, Mutex<VaultState>>,
 ) -> Result<(), String> {
     let key = get_key(&vault_state)?;
@@ -113,7 +115,7 @@ pub fn update_password_entry(
 
     // Determine the encrypted bytes to store
     let encrypted: Vec<u8> = if let Some(ref plaintext) = request.password {
-        crypto::encrypt_password(&key, plaintext)?
+        crypto::encrypt_password(key.as_bytes(), plaintext)?
     } else {
         // No new password supplied — preserve the existing ciphertext
         let entries = db::get_all_entries()?;
@@ -124,6 +126,11 @@ pub fn update_password_entry(
         db::base64_decode(&entry.encrypted_password)
             .map_err(|e| format!("Base64 decode error: {e}"))?
     };
+
+    // Zeroize plaintext password if present
+    if let Some(ref mut pw) = request.password {
+        pw.zeroize();
+    }
 
     db::update_entry(
         &request.id,
@@ -188,7 +195,7 @@ pub fn decrypt_entry_password(
     let raw = db::base64_decode(&entry.encrypted_password)
         .map_err(|e| format!("Base64 decode error: {e}"))?;
 
-    crypto::decrypt_password(&key, &raw)
+    crypto::decrypt_password(key.as_bytes(), &raw)
 }
 
 // ── Password generator ─────────────────────────────────────────────────────────

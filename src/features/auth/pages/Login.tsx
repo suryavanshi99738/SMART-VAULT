@@ -36,6 +36,10 @@ interface LoginFormState {
 
 interface LoginProps {
   onLoginSuccess: (name: string, masterPassword: string) => void;
+  /** The selected vault ID (multi-vault). Null for legacy single-vault. */
+  vaultId?: string | null;
+  /** Display name of the vault being unlocked. */
+  vaultName?: string;
 }
 
 // ── Sub-components ─────────────────────────────────────────────────────────────
@@ -112,7 +116,7 @@ const AlertIcon: React.FC = () => (
 
 // ── Main Component ─────────────────────────────────────────────────────────────
 
-const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
+const Login: React.FC<LoginProps> = ({ onLoginSuccess, vaultId, vaultName }) => {
   const [formState, setFormState] = useState<LoginFormState>({
     name: "",
     password: "",
@@ -131,12 +135,14 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
     setFormState((prev) => ({ ...prev, shakeError: true }));
     setTimeout(() => {
       setFormState((prev) => ({ ...prev, shakeError: false }));
-    }, 280);
+    }, 350);
   };
 
   // Check whether a master password already exists on mount
   useEffect(() => {
-    tauriInvoke<boolean>("check_if_master_exists")
+    tauriInvoke<boolean>("check_if_master_exists", {
+      vaultId: vaultId || null,
+    })
       .then((exists) => {
         setFormState((prev) => ({
           ...prev,
@@ -146,7 +152,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
       .catch(() => {
         setFormState((prev) => ({ ...prev, authMode: "setup" }));
       });
-  }, []);
+  }, [vaultId]);
 
   const isNameEmpty = formState.name.trim().length === 0;
   const isPasswordEmpty = formState.password.trim().length === 0;
@@ -203,10 +209,12 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
         // First-time setup: hash and persist the master password, then unlock
         await tauriInvoke<boolean>("set_master_password", {
           password: formState.password,
+          vaultId: vaultId || null,
         });
         // Immediately derive key and store in VaultState — same single call as login
         const result = await tauriInvoke<AuthResult>("unlock_vault", {
           password: formState.password,
+          vaultId: vaultId || null,
         });
         if (result.success) {
           onLoginSuccess(formState.name.trim(), formState.password);
@@ -222,6 +230,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
         // Returning user: verify + derive key in a single atomic call
         const result = await tauriInvoke<AuthResult>("unlock_vault", {
           password: formState.password,
+          vaultId: vaultId || null,
         });
 
         if (result.success) {
@@ -276,7 +285,9 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
           <div className={styles.brandIcon} aria-hidden="true">
             <LockIcon />
           </div>
-          <h1 className={styles.title}>Smart Vault</h1>
+          <h1 className={styles.title}>
+            {vaultName ? `Unlock: ${vaultName}` : "Smart Vault"}
+          </h1>
           <p className={styles.subtitle}>
             {formState.authMode === "setup"
               ? "Create your master password"
@@ -318,7 +329,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
               <input
                 id="master-password"
                 type={formState.showPassword ? "text" : "password"}
-                className={`${styles.input} ${formState.errorMessage ? styles.inputError : ""}`}
+                className={`${styles.input} ${formState.errorMessage ? styles.inputError : ""}${formState.shakeError ? " " + styles.inputErrorFlash : ""}`}
                 value={formState.password}
                 onChange={handlePasswordChange}
                 placeholder="Enter your master password"
@@ -380,7 +391,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
             </span>
             {formState.isLoading && (
               <span className={styles.buttonLabelLoading}>
-                {formState.authMode === "setup" ? "Setting up\u2026" : "Verifying\u2026"}
+                {formState.authMode === "setup" ? "Setting up\u2026" : "Decrypting Vault\u2026"}
               </span>
             )}
           </button>
