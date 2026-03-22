@@ -40,8 +40,8 @@
   width: 48px;
   height: 48px;
   border-radius: 12px;
-  background: var(--accent-subtle);
-  color: var(--accent);
+  background: var(--primary-subtle);
+  color: var(--primary-default);
   margin-bottom: 14px;
 }
 
@@ -81,8 +81,8 @@
 }
 
 .vaultItem:hover {
-  border-color: var(--accent);
-  background: var(--accent-subtle);
+  border-color: var(--primary-default);
+  background: var(--primary-subtle);
 }
 
 .vaultIcon {
@@ -90,8 +90,8 @@
   width: 36px;
   height: 36px;
   border-radius: 8px;
-  background: var(--accent-subtle);
-  color: var(--accent);
+  background: var(--primary-subtle);
+  color: var(--primary-default);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -144,8 +144,8 @@
 }
 
 .iconBtnDanger:hover {
-  background: var(--danger-subtle, rgba(220, 38, 38, 0.1));
-  color: var(--danger, #dc2626);
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
 }
 
 /* ── Search bar ───────────────────────────────────────────── */
@@ -182,8 +182,8 @@
 }
 
 .searchInput:focus {
-  border-color: var(--input-focus-border, var(--accent));
-  box-shadow: 0 0 0 2px var(--input-focus-ring, rgba(90, 120, 99, 0.15));
+  border-color: var(--input-focus-border);
+  box-shadow: 0 0 0 2px var(--input-focus-ring);
 }
 
 .searchClear {
@@ -205,7 +205,7 @@
 }
 
 .searchClear:hover {
-  background: var(--bg-hover, var(--bg-tertiary));
+  background: var(--bg-hover);
   color: var(--text-primary);
 }
 
@@ -224,16 +224,16 @@
   padding: 10px 16px;
   font-size: 0.85rem;
   font-weight: 600;
-  color: var(--accent);
-  background: var(--accent-subtle);
-  border: 1px dashed var(--accent);
+  color: var(--primary-default);
+  background: var(--primary-subtle);
+  border: 1px dashed var(--primary-default);
   border-radius: 6px;
   cursor: pointer;
   transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 
 .createBtn:hover {
-  background: var(--accent);
+  background: var(--primary-default);
   color: #fff;
 }
 
@@ -271,11 +271,12 @@
 }
 
 .input:focus {
-  border-color: var(--accent);
+  border-color: var(--input-focus-border);
+  box-shadow: 0 0 0 3px var(--input-focus-ring);
 }
 
 .inputError {
-  border-color: var(--danger, #dc2626);
+  border-color: var(--color-danger);
 }
 
 .formActions {
@@ -301,9 +302,9 @@
 }
 
 .formBtnPrimary {
-  background: var(--accent);
+  background: var(--primary-default);
   color: #fff;
-  border-color: var(--accent);
+  border-color: var(--primary-default);
 }
 
 .formBtnPrimary:hover {
@@ -318,7 +319,7 @@
 /* ── Error / status ──────────────────────────────────────── */
 .errorText {
   font-size: 0.78rem;
-  color: var(--danger, #dc2626);
+  color: var(--color-danger);
   margin: 2px 0 0;
 }
 
@@ -333,7 +334,7 @@
 .renameInput {
   padding: 4px 8px;
   font-size: 0.85rem;
-  border: 1px solid var(--accent);
+  border: 1px solid var(--primary-default);
   border-radius: 3px;
   background: var(--bg-primary);
   color: var(--text-primary);
@@ -392,7 +393,7 @@
 }
 
 .confirmBtnDanger {
-  background: var(--danger, #dc2626);
+  background: var(--color-danger);
   color: #fff;
   border: none;
   border-radius: 4px;

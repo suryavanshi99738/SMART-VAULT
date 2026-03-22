@@ -54,7 +54,7 @@
   border-radius: 14px;
   background-color: var(--primary-default);
   margin-bottom: 16px;
-  box-shadow: 0 2px 8px rgba(59, 73, 83, 0.3);
+  box-shadow: 0 2px 8px var(--primary-ring);
 }
 
 :global([data-theme="dark"]) .brandIcon {
@@ -242,7 +242,7 @@
 .checkbox {
   width: 16px;
   height: 16px;
-  accent-color: var(--color-secondary);
+  accent-color: var(--primary-default);
   cursor: pointer;
   flex-shrink: 0;
 }
@@ -271,13 +271,13 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  box-shadow: 0 2px 8px rgba(59, 73, 83, 0.22);
+  box-shadow: 0 2px 8px var(--primary-ring);
   overflow: hidden;
 }
 
 .loginButton:hover:not(:disabled) {
   background-color: var(--primary-hover);
-  box-shadow: 0 4px 14px rgba(59, 73, 83, 0.3);
+  box-shadow: 0 4px 14px var(--primary-ring);
 }
 
 .loginButton:active:not(:disabled) {

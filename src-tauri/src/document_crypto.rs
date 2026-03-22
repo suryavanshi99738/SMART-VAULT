@@ -98,7 +98,7 @@ pub fn encrypt_file_chunked(
     let total_chunks = if file_size == 0 {
         1 // Empty files still get one (empty) chunk
     } else {
-        (file_size + chunk_size as u64 - 1) / chunk_size as u64
+        file_size.div_ceil(chunk_size as u64)
     };
 
     // Extract original filename + extension

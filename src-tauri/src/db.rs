@@ -86,7 +86,7 @@ pub fn close_db() -> Result<(), String> {
 /// Internal: open DB at a given path and run migrations.
 fn init_db_at_path(path: &PathBuf) -> Result<(), String> {
 
-    let conn = Connection::open(&path)
+    let conn = Connection::open(path)
         .map_err(|e| format!("Failed to open database: {e}"))?;
 
     // Enable WAL mode for better concurrent read performance

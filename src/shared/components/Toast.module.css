@@ -41,17 +41,17 @@
 }
 
 .icon[data-type="warning"] {
-  background-color: rgba(122, 100, 40, 0.14);
+  background-color: rgba(255, 167, 38, 0.14);
   color: var(--color-warning);
 }
 
 .icon[data-type="info"] {
-  background-color: rgba(59, 80, 112, 0.14);
+  background-color: rgba(66, 165, 245, 0.14);
   color: var(--color-info);
 }
 
 .icon[data-type="error"] {
-  background-color: var(--color-danger-bg, rgba(122, 64, 64, 0.14));
+  background-color: var(--color-danger-bg);
   color: var(--color-danger);
 }
 

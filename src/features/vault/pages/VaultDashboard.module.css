@@ -36,13 +36,13 @@
   background-color: var(--primary-default);
   color: #ffffff;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(59, 73, 83, 0.2);
+  box-shadow: 0 2px 8px var(--primary-ring);
   transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
 }
 
 .addBtn:hover {
   background-color: var(--primary-hover);
-  box-shadow: 0 4px 14px rgba(59, 73, 83, 0.3);
+  box-shadow: 0 4px 14px var(--primary-ring);
 }
 
 .addBtn:active {

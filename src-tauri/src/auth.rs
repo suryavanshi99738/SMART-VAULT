@@ -72,7 +72,7 @@ fn read_config_at(path: &PathBuf) -> Result<Option<VaultConfig>, String> {
     if !path.exists() {
         return Ok(None);
     }
-    let data = fs::read_to_string(&path)
+    let data = fs::read_to_string(path)
         .map_err(|e| format!("Failed to read config: {e}"))?;
     if data.trim().is_empty() {
         return Ok(None);
@@ -95,7 +95,7 @@ pub fn write_config_for_vault(vault_id: &str, cfg: &VaultConfig) -> Result<(), S
 fn write_config_at(path: &PathBuf, cfg: &VaultConfig) -> Result<(), String> {
     let json = serde_json::to_string_pretty(cfg)
         .map_err(|e| format!("Serialisation error: {e}"))?;
-    fs::write(&path, json)
+    fs::write(path, json)
         .map_err(|e| format!("Failed to write config: {e}"))?;
     Ok(())
 }

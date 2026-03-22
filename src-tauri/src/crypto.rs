@@ -78,7 +78,7 @@ pub fn load_or_create_salt_for_vault(vault_id: &str) -> Result<Vec<u8>, String> 
 /// Internal: load or create salt at a given path.
 fn load_or_create_salt_at(path: &PathBuf) -> Result<Vec<u8>, String> {
     if path.exists() {
-        let salt = fs::read(&path)
+        let salt = fs::read(path)
             .map_err(|e| format!("Failed to read salt: {e}"))?;
         if salt.len() == SALT_LEN {
             return Ok(salt);
@@ -87,7 +87,7 @@ fn load_or_create_salt_at(path: &PathBuf) -> Result<Vec<u8>, String> {
     }
     let mut salt = vec![0u8; SALT_LEN];
     rand::thread_rng().fill_bytes(&mut salt);
-    fs::write(&path, &salt)
+    fs::write(path, &salt)
         .map_err(|e| format!("Failed to write salt: {e}"))?;
     Ok(salt)
 }

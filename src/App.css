@@ -1,49 +1,50 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
 * {
   box-sizing: border-box;
 }
 
 :root {
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-size: 16px;
   line-height: 1.5;
   font-weight: 400;
   color-scheme: light;
 
   /* ── Colour tokens — Light Theme ──────────────────────── */
-  /* Primary backgrounds */
-  --bg-primary: #EBF4DD;
-  --bg-secondary: #DAE9C9;
-  --bg-tertiary: #CCE0B8;
-  --bg-hover: #C2D8AC;
-  /* Borders — muted dark-slate with opacity */
-  --border-default: rgba(59, 73, 83, 0.22);
+  /* Backgrounds */
+  --bg-primary:    #F5F7F8;
+  --bg-secondary:  #FFFFFF;
+  --bg-tertiary:   #EAECEF;
+  --bg-hover:      #E2E5EA;
+  /* Borders */
+  --border-default: #E5E7EB;
   /* Text */
-  --text-primary: #1A2228;
-  --text-secondary: #3B4953;
-  --text-muted: #5A7863;
-  /* Primary action palette (dark slate green) */
-  --primary-default: #3B4953;
-  --primary-hover: #4A5E6A;
-  --primary-active: #2D3B43;
-  --primary-ring: rgba(59, 73, 83, 0.18);
-  --primary-subtle: rgba(59, 73, 83, 0.09);
-  /* Secondary accent */
-  --color-secondary: #5A7863;
+  --text-primary:   #1F1F1F;
+  --text-secondary: #6B7280;
+  --text-muted:     #9CA3AF;
+  /* Primary accent — #495E57 (security-green) */
+  --primary-default: #495E57;
+  --primary-hover:   #3D524B;
+  --primary-active:  #324540;
+  --primary-ring:    rgba(73, 94, 87, 0.18);
+  --primary-subtle:  rgba(73, 94, 87, 0.08);
+  /* Secondary accent — #45474B (slate) */
+  --color-secondary: #45474B;
+  /* Highlight — #F4CE14 (gold) */
+  --color-highlight: #F4CE14;
   /* Semantic */
-  --color-danger: #7A4040;
-  --color-danger-bg: rgba(122, 64, 64, 0.09);
-  --color-danger-border: rgba(122, 64, 64, 0.28);
-  --color-warning: #7A6428;
-  --color-success: #3B6B4A;
-  --color-info: #3B5070;
+  --color-danger:        #E57373;
+  --color-danger-bg:     rgba(229, 115, 115, 0.10);
+  --color-danger-border: rgba(229, 115, 115, 0.30);
+  --color-warning:       #FFA726;
+  --color-success:       #66BB6A;
+  --color-info:          #42A5F5;
   /* Input focus */
-  --input-focus-border: #5A7863;
-  --input-focus-ring: rgba(90, 120, 99, 0.22);
+  --input-focus-border: #495E57;
+  --input-focus-ring:   rgba(73, 94, 87, 0.22);
 
   /* ── Spacing tokens ───────────────────────────────────── */
-  /* Consumed by layout rules and component CSS modules.    */
-  /* Overridden under body.compact-mode for tighter layout. */
   --spacing-xs:  4px;
   --spacing-sm:  8px;
   --spacing-md:  12px;
@@ -52,14 +53,10 @@
   --spacing-2xl: 32px;
 
   /* ── Animation tokens ─────────────────────────────────── */
-  /* Set to 0ms by body.reduced-motion to kill all motion.  */
-  /* All transition / animation rules MUST use these vars.  */
   --anim-duration-fast:   150ms;
   --anim-duration-normal: 250ms;
   --anim-duration-slow:   400ms;
   --anim-easing:          cubic-bezier(0.4, 0, 0.2, 1);
-
-  /* Item enter animation used by vault cards */
   --anim-item-enter:      0.25s ease-out;
 }
 
@@ -68,35 +65,38 @@
 [data-theme="dark"] {
   color-scheme: dark;
   /* Backgrounds */
-  --bg-primary: #1E2529;
-  --bg-secondary: #273136;
-  --bg-tertiary: #2E3A40;
-  --bg-hover: #344850;
-  /* Borders — soft green-tinted */
-  --border-default: rgba(144, 171, 139, 0.18);
+  --bg-primary:    #1E1E1E;
+  --bg-secondary:  #2A2A2A;
+  --bg-tertiary:   #333333;
+  --bg-hover:      #3A3A3A;
+  /* Borders */
+  --border-default: #3A3A3A;
   /* Text */
-  --text-primary: #F1F5F2;
-  --text-secondary: #AAB8B2;
-  --text-muted: #7A9A8E;
-  /* Primary action — same brand slate, hover goes to secondary accent */
-  --primary-default: #3B4953;
-  --primary-hover: #5A7863;
-  --primary-active: #4A5E6A;
-  --primary-ring: rgba(90, 120, 99, 0.25);
-  --primary-subtle: rgba(144, 171, 139, 0.1);
+  --text-primary:   #F5F7F8;
+  --text-secondary: #C0C4C8;
+  --text-muted:     #9CA3AF;
+  /* Primary accent — muted teal for dark */
+  --primary-default: #6FA79B;
+  --primary-hover:   #5E9389;
+  --primary-active:  #4E7F75;
+  --primary-ring:    rgba(111, 167, 155, 0.25);
+  --primary-subtle:  rgba(111, 167, 155, 0.10);
   /* Secondary accent */
-  --color-secondary: #5A7863;
+  --color-secondary: #A0A4A8;
+  /* Highlight stays same */
+  --color-highlight: #F4CE14;
   /* Semantic */
-  --color-danger: #A06060;
-  --color-danger-bg: rgba(160, 96, 96, 0.12);
-  --color-danger-border: rgba(160, 96, 96, 0.3);
-  --color-warning: #9A8048;
-  --color-success: #5A8A6A;
-  --color-info: #5A7890;
-  /* Input focus — softer highlight */
-  --input-focus-border: #90AB8B;
-  --input-focus-ring: rgba(144, 171, 139, 0.22);
+  --color-danger:        #EF9A9A;
+  --color-danger-bg:     rgba(239, 154, 154, 0.12);
+  --color-danger-border: rgba(239, 154, 154, 0.30);
+  --color-warning:       #FFCC80;
+  --color-success:       #81C784;
+  --color-info:          #90CAF9;
+  /* Input focus */
+  --input-focus-border: #6FA79B;
+  --input-focus-ring:   rgba(111, 167, 155, 0.25);
 }
+
 
 /* ── Compact mode ────────────────────────────────────────── */
 /* Override spacing tokens — all components that consume     */
@@ -350,16 +350,16 @@ textarea:-webkit-autofill:focus {
 }
 
 .sidebar-nav-item.is-active {
-  background-color: rgba(90, 120, 99, 0.15);
-  border-left-color: var(--color-secondary);
+  background-color: var(--primary-subtle);
+  border-left-color: var(--color-highlight);
   color: var(--text-primary);
   font-weight: 600;
 }
 
-/* Dark: solid accent left border on active item */
+/* Dark: highlight left border on active item */
 [data-theme="dark"] .sidebar-nav-item.is-active {
-  background-color: rgba(90, 120, 99, 0.18);
-  border-left-color: #5A7863;
+  background-color: var(--primary-subtle);
+  border-left-color: var(--color-highlight);
   color: var(--text-primary);
 }
 
@@ -380,6 +380,28 @@ textarea:-webkit-autofill:focus {
   border-bottom: 1px solid var(--border-default);
   background-color: var(--bg-primary);
   box-shadow: 0 1px 0 var(--border-default);
+}
+
+.addBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 20px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-family: inherit;
+  border: none;
+  border-radius: 8px;
+  background-color: var(--primary-default);
+  color: #ffffff;
+  cursor: pointer;
+  box-shadow: 0 2px 8px var(--primary-ring);
+  transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+}
+
+.addBtn:hover {
+  background-color: var(--primary-hover);
+  box-shadow: 0 4px 16px var(--primary-ring);
 }
 
 .app-header-left {
@@ -478,7 +500,7 @@ textarea:-webkit-autofill:focus {
   flex-shrink: 0;
   letter-spacing: 0;
   user-select: none;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.18);
+  box-shadow: 0 1px 4px var(--shadow-light);
 }
 
 .app-content {
@@ -747,7 +769,7 @@ body.reduced-motion .dashboard-enter .app-content > * {
 }
 
 .sidebar-vault-item--active {
-  background-color: rgba(90, 120, 99, 0.15);
+  background-color: var(--primary-subtle);
   color: var(--text-primary);
   font-weight: 600;
 }
@@ -758,7 +780,7 @@ body.reduced-motion .dashboard-enter .app-content > * {
 }
 
 .sidebar-vault-item--active .sidebar-vault-icon {
-  color: var(--color-secondary);
+  color: var(--primary-default);
 }
 
 .sidebar-vault-name {
@@ -772,7 +794,7 @@ body.reduced-motion .dashboard-enter .app-content > * {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background-color: var(--color-secondary);
+  background-color: var(--primary-default);
   flex-shrink: 0;
 }
 
@@ -856,9 +878,9 @@ body.reduced-motion .dashboard-enter .app-content > * {
   animation: dropdownFadeIn 120ms ease-out;
 }
 
-:global([data-theme="dark"]) .header-vault-dropdown {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 2px 6px rgba(0, 0, 0, 0.25);
-  background: #273136;
+[data-theme="dark"] .header-vault-dropdown {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.3);
+  background: var(--bg-secondary);
 }
 
 @keyframes dropdownFadeIn {
@@ -889,7 +911,7 @@ body.reduced-motion .dashboard-enter .app-content > * {
 }
 
 .header-vault-dropdown-item.is-active {
-  background: rgba(90, 120, 99, 0.14);
+  background: var(--primary-subtle);
   color: var(--text-primary);
   font-weight: 600;
 }
@@ -905,10 +927,10 @@ body.reduced-motion .dashboard-enter .app-content > * {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--color-secondary);
+  color: var(--primary-default);
   padding: 1px 6px;
   border-radius: 4px;
-  background: rgba(90, 120, 99, 0.14);
+  background: var(--primary-subtle);
 }
 
 .header-vault-dropdown-divider {
