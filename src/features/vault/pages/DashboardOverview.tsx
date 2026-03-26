@@ -49,19 +49,19 @@ const DashboardOverview: React.FC = () => {
 
       {/* ── Stat Cards ─────────────────────────────────── */}
       <div className={styles.stats}>
-        <div className={styles.statCard}>
+        <div className={`${styles.statCard} glass`}>
           <span className={styles.statValue}>{total}</span>
           <span className={styles.statLabel}>Total Entries</span>
         </div>
-        <div className={styles.statCard}>
+        <div className={`${styles.statCard} glass`}>
           <span className={styles.statValue}>{uniqueServices}</span>
           <span className={styles.statLabel}>Unique Services</span>
         </div>
-        <div className={styles.statCard}>
+        <div className={`${styles.statCard} glass`}>
           <span className={styles.statValue}>{categoryCount}</span>
           <span className={styles.statLabel}>Categories</span>
         </div>
-        <div className={styles.statCard}>
+        <div className={`${styles.statCard} glass`}>
           <span className={styles.statValue}>
             {recent.length > 0 ? formatDate(recent[0].created_at) : "—"}
           </span>

@@ -92,7 +92,7 @@ const PasswordItem: React.FC<PasswordItemProps> = ({
   };
 
   return (
-    <div className={`${styles.card} ${expanded ? styles.cardExpanded : ""}`}>
+    <div className={`${styles.card} glass ${expanded ? styles.cardExpanded : ""}`}>
       {/* Main row */}
       <div className={styles.mainRow}>
         <div

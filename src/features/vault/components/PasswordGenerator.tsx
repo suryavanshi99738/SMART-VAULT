@@ -60,7 +60,7 @@ const PasswordGenerator: React.FC<PasswordGeneratorProps> = ({ onUse }) => {
   };
 
   return (
-    <div className={styles.wrapper}>
+    <div className={`${styles.wrapper} glass`}>
       <label className={styles.sectionLabel}>Password Generator</label>
 
       <div className={styles.output}>

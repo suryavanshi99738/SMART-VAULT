@@ -93,7 +93,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
   activeVaultName,
   onSwitchVault,
 }) => {
-  const { mode, setMode } = useTheme();
+  const { mode, setMode, transparency, setTransparency } = useTheme();
   const [local, setLocal] = useState<AppSettings>(settings);
   const [showCsvModal, setShowCsvModal] = useState(false);
   const [backupStatus, setBackupStatus] = useState<{
@@ -370,7 +370,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
         </p>
 
         {/* Auto-lock duration */}
-        <div className={styles.settingRow}>
+        <div className={`${styles.settingRow} glass`}>
           <div className={styles.settingInfo}>
             <span className={styles.settingLabel}>
               Auto-lock after inactivity
@@ -395,7 +395,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
         </div>
 
         {/* Lock on focus loss */}
-        <div className={styles.settingRow}>
+        <div className={`${styles.settingRow} glass`}>
           <label className={styles.settingInfo} htmlFor="toggle-lock-hide">
             <span className={styles.settingLabel}>
               Lock when window loses focus
@@ -413,7 +413,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
         </div>
 
         {/* Clipboard clear timer */}
-        <div className={styles.settingRow}>
+        <div className={`${styles.settingRow} glass`}>
           <div className={styles.settingInfo}>
             <span className={styles.settingLabel}>Clear clipboard after</span>
             <span className={styles.settingHint}>
@@ -436,7 +436,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
         </div>
 
         {/* Brute-force protection indicator */}
-        <div className={styles.settingRow}>
+        <div className={`${styles.settingRow} glass`}>
           <div className={styles.settingInfo}>
             <span className={styles.settingLabel}>Brute-force protection</span>
             <span className={styles.settingHint}>
@@ -501,8 +501,28 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
           })}
         </div>
 
+        {/* Transparency control */}
+        <div className={`${styles.settingRow} glass`}>
+          <label className={styles.settingInfo} htmlFor="slider-transparency">
+            <span className={styles.settingLabel}>Glass Transparency</span>
+            <span className={styles.settingHint}>
+              Adjust the background opacity for glassmorphism panels.
+            </span>
+          </label>
+          <input
+            id="slider-transparency"
+            type="range"
+            min="0.01"
+            max="0.25"
+            step="0.01"
+            value={transparency}
+            onChange={(e) => setTransparency(parseFloat(e.target.value))}
+            style={{ width: "120px", accentColor: "var(--primary-default)" }}
+          />
+        </div>
+
         {/* Compact mode toggle */}
-        <div className={styles.settingRow}>
+        <div className={`${styles.settingRow} glass`}>
           <label className={styles.settingInfo} htmlFor="toggle-compact">
             <span className={styles.settingLabel}>Compact mode</span>
             <span className={styles.settingHint}>
@@ -518,7 +538,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
         </div>
 
         {/* Enable animations toggle */}
-        <div className={styles.settingRow}>
+        <div className={`${styles.settingRow} glass`}>
           <label className={styles.settingInfo} htmlFor="toggle-animations">
             <span className={styles.settingLabel}>Enable animations</span>
             <span className={styles.settingHint}>
@@ -542,7 +562,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
         </p>
 
         {/* Reduced motion */}
-        <div className={styles.settingRow}>
+        <div className={`${styles.settingRow} glass`}>
           <label className={styles.settingInfo} htmlFor="toggle-reduced-motion">
             <span className={styles.settingLabel}>Reduced motion mode</span>
             <span className={styles.settingHint}>
@@ -560,7 +580,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
         </div>
 
         {/* Instant unlock */}
-        <div className={styles.settingRow}>
+        <div className={`${styles.settingRow} glass`}>
           <label className={styles.settingInfo} htmlFor="toggle-instant-unlock">
             <span className={styles.settingLabel}>Instant unlock mode</span>
             <span className={styles.settingHint}>
@@ -584,7 +604,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
         </p>
 
         {/* Close to tray */}
-        <div className={styles.settingRow}>
+        <div className={`${styles.settingRow} glass`}>
           <label className={styles.settingInfo} htmlFor="toggle-close-tray">
             <span className={styles.settingLabel}>Close to tray</span>
             <span className={styles.settingHint}>
@@ -601,7 +621,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
         </div>
 
         {/* Lock on minimize */}
-        <div className={styles.settingRow}>
+        <div className={`${styles.settingRow} glass`}>
           <label
             className={styles.settingInfo}
             htmlFor="toggle-lock-minimize"
@@ -621,7 +641,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
         </div>
 
         {/* Global shortcut toggle */}
-        <div className={styles.settingRow}>
+        <div className={`${styles.settingRow} glass`}>
           <label
             className={styles.settingInfo}
             htmlFor="toggle-global-shortcut"
@@ -641,7 +661,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
         </div>
 
         {/* Shortcut keybinding */}
-        <div className={styles.settingRow}>
+        <div className={`${styles.settingRow} glass`}>
           <div className={styles.settingInfo}>
             <span className={styles.settingLabel}>Shortcut keybinding</span>
             <span className={styles.settingHint}>
@@ -684,7 +704,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
         </div>
 
         {/* Restore window state */}
-        <div className={styles.settingRow}>
+        <div className={`${styles.settingRow} glass`}>
           <label
             className={styles.settingInfo}
             htmlFor="toggle-restore-window"
@@ -755,7 +775,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
         </div>
 
         {/* Last backup date */}
-        <div className={styles.settingRow}>
+        <div className={`${styles.settingRow} glass`}>
           <div className={styles.settingInfo}>
             <span className={styles.settingLabel}>Last backup</span>
             <span className={styles.settingHint}>
@@ -776,7 +796,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
         </div>
 
         {/* Backup reminder */}
-        <div className={styles.settingRow}>
+        <div className={`${styles.settingRow} glass`}>
           <label
             className={styles.settingInfo}
             htmlFor="toggle-backup-reminder"
@@ -803,7 +823,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
         </p>
 
         {/* Secure delete */}
-        <div className={styles.settingRow}>
+        <div className={`${styles.settingRow} glass`}>
           <label
             className={styles.settingInfo}
             htmlFor="toggle-doc-secure-delete"
@@ -822,7 +842,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
         </div>
 
         {/* Auto-cleanup temp files */}
-        <div className={styles.settingRow}>
+        <div className={`${styles.settingRow} glass`}>
           <div className={styles.settingInfo}>
             <span className={styles.settingLabel}>
               Auto-cleanup temp files
@@ -848,7 +868,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
         </div>
 
         {/* Chunk size */}
-        <div className={styles.settingRow}>
+        <div className={`${styles.settingRow} glass`}>
           <div className={styles.settingInfo}>
             <span className={styles.settingLabel}>
               Encryption chunk size
@@ -873,7 +893,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
         </div>
 
         {/* Encryption info badge */}
-        <div className={styles.settingRow}>
+        <div className={`${styles.settingRow} glass`}>
           <div className={styles.settingInfo}>
             <span className={styles.settingLabel}>Encryption algorithm</span>
             <span className={styles.settingHint}>
@@ -942,7 +962,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
 
         {/* Current vault info */}
         {activeVaultName && (
-          <div className={styles.settingRow}>
+          <div className={`${styles.settingRow} glass`}>
             <div className={styles.settingInfo}>
               <span className={styles.settingLabel}>Active vault</span>
               <span className={styles.settingHint}>

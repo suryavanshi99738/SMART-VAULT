@@ -288,7 +288,7 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({
             const category = getFileCategory(doc.original_extension);
             const isLoading = actionLoading === doc.id;
             return (
-              <div key={doc.id} className={styles.card}>
+              <div key={doc.id} className={`${styles.card} glass`}>
                 <div className={styles.cardTop}>
                   <div
                     className={styles.fileIcon}

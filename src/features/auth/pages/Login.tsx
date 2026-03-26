@@ -276,7 +276,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess, vaultId, vaultName }) => 
   return (
     <div className={styles.page}>
       <div
-        className={`${styles.card} ${formState.shakeError ? styles.cardShake : ""}`}
+        className={`${styles.card} glass ${formState.shakeError ? styles.cardShake : ""}`}
         role="main"
       >
 

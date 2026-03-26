@@ -83,7 +83,7 @@ const CategoriesPage: React.FC = () => {
         {categories.map(([category, entries]) => (
           <div
             key={category}
-            className={styles.card}
+            className={`${styles.card} glass`}
             onClick={() => setSelectedCategory(category)}
             role="button"
             tabIndex={0}

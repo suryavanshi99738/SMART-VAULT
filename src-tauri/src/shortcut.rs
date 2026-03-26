@@ -28,9 +28,13 @@ fn register_shortcut_inner(app: &AppHandle, accelerator: &str) -> Result<(), Str
             if event.state == tauri_plugin_global_shortcut::ShortcutState::Pressed {
                 println!("[shortcut] triggered: {shortcut}");
                 if let Some(win) = app_handle.get_webview_window("main") {
-                    let _ = win.show();
-                    let _ = win.unminimize();
-                    let _ = win.set_focus();
+                    if win.is_visible().unwrap_or(false) {
+                        let _ = win.hide();
+                    } else {
+                        let _ = win.show();
+                        let _ = win.unminimize();
+                        let _ = win.set_focus();
+                    }
                 } else {
                     eprintln!("[shortcut] window \"main\" not found");
                 }
@@ -71,10 +75,7 @@ pub fn init_global_shortcut(app: &AppHandle) {
 ///
 /// `accelerator` follows Electron-style: e.g. `"Ctrl+Alt+V"`, `"CmdOrCtrl+K"`.
 #[tauri::command]
-pub fn register_global_shortcut(
-    app: AppHandle,
-    accelerator: String,
-) -> Result<(), String> {
+pub fn register_global_shortcut(app: AppHandle, accelerator: String) -> Result<(), String> {
     register_shortcut_inner(&app, &accelerator)
 }
 
@@ -82,11 +83,9 @@ pub fn register_global_shortcut(
 #[tauri::command]
 pub fn unregister_global_shortcut(app: AppHandle) -> Result<(), String> {
     println!("[shortcut] unregistering all shortcuts");
-    app.global_shortcut()
-        .unregister_all()
-        .map_err(|e| {
-            let msg = format!("Failed to unregister shortcuts: {e}");
-            eprintln!("[shortcut] {msg}");
-            msg
-        })
+    app.global_shortcut().unregister_all().map_err(|e| {
+        let msg = format!("Failed to unregister shortcuts: {e}");
+        eprintln!("[shortcut] {msg}");
+        msg
+    })
 }

@@ -188,7 +188,7 @@ const ImportDocumentModal: React.FC<ImportDocumentModalProps> = ({
 
   return (
     <div className={styles.overlay} onClick={onClose}>
-      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+      <div className={`${styles.modal} glass`} onClick={(e) => e.stopPropagation()}>
         <h3 className={styles.title}>Import Document</h3>
 
         {/* File selection */}

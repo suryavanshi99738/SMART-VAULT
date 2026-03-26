@@ -77,7 +77,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 
 	return (
 		<aside
-			className={`sidebar${collapsed ? " sidebar-collapsed" : ""}`}
+			className={`sidebar glass${collapsed ? " sidebar-collapsed" : ""}`}
 			aria-label="Main navigation"
 		>
 			<div className="sidebar-header">

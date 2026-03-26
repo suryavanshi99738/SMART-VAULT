@@ -140,7 +140,7 @@ export default function CsvImportModal({
 
   return (
     <div className={styles.backdrop} onClick={handleBackdrop}>
-      <div className={styles.modal}>
+      <div className={`${styles.modal} glass`}>
         {/* header */}
         <div className={styles.header}>
           <h3 className={styles.title}>

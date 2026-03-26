@@ -105,7 +105,7 @@ const AddEditModal: React.FC<AddEditModalProps> = ({
   return createPortal(
     <div className={styles.backdrop} onClick={onClose}>
       <div
-        className={styles.modal}
+        className={`${styles.modal} glass`}
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"

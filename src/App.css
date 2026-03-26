@@ -1,50 +1,47 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
-* {
-  box-sizing: border-box;
-}
-
 :root {
-  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-size: 16px;
   line-height: 1.5;
   font-weight: 400;
   color-scheme: light;
 
-  /* ── Colour tokens — Light Theme ──────────────────────── */
-  /* Backgrounds */
-  --bg-primary:    #F5F7F8;
+  --bg-primary:    #FAFAFA;
   --bg-secondary:  #FFFFFF;
-  --bg-tertiary:   #EAECEF;
-  --bg-hover:      #E2E5EA;
-  /* Borders */
+  --bg-tertiary:   #F3F4F6;
+  --bg-hover:      #F8F9FA;
+  
   --border-default: #E5E7EB;
-  /* Text */
-  --text-primary:   #1F1F1F;
+
+  --text-primary:   #111827;
   --text-secondary: #6B7280;
   --text-muted:     #9CA3AF;
-  /* Primary accent — #495E57 (security-green) */
-  --primary-default: #495E57;
-  --primary-hover:   #3D524B;
-  --primary-active:  #324540;
-  --primary-ring:    rgba(73, 94, 87, 0.18);
-  --primary-subtle:  rgba(73, 94, 87, 0.08);
-  /* Secondary accent — #45474B (slate) */
-  --color-secondary: #45474B;
-  /* Highlight — #F4CE14 (gold) */
-  --color-highlight: #F4CE14;
-  /* Semantic */
-  --color-danger:        #E57373;
-  --color-danger-bg:     rgba(229, 115, 115, 0.10);
-  --color-danger-border: rgba(229, 115, 115, 0.30);
-  --color-warning:       #FFA726;
-  --color-success:       #66BB6A;
-  --color-info:          #42A5F5;
-  /* Input focus */
-  --input-focus-border: #495E57;
-  --input-focus-ring:   rgba(73, 94, 87, 0.22);
 
-  /* ── Spacing tokens ───────────────────────────────────── */
+  --primary-default:  #FF6B6B;
+  --primary-hover:    #FA5252;
+  --primary-active:   #E03131;
+  --primary-gradient: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
+  --primary-ring:     rgba(255, 107, 107, 0.2);
+  --primary-subtle:   rgba(255, 107, 107, 0.08);
+
+  --color-secondary: #4B5563;
+  --color-highlight: #FBBF24;
+
+  --color-danger:        #EF4444;
+  --color-danger-bg:     rgba(239, 68, 68, 0.1);
+  --color-danger-border: rgba(239, 68, 68, 0.2);
+  --color-warning:       #F59E0B;
+  --color-success:       #10B981;
+  --color-info:          #3B82F6;
+
+  --input-bg:           #F9FAFB;
+  --input-focus-border: #FF6B6B;
+  --input-focus-ring:   rgba(255, 107, 107, 0.2);
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+
   --spacing-xs:  4px;
   --spacing-sm:  8px;
   --spacing-md:  12px;
@@ -52,7 +49,6 @@
   --spacing-xl:  24px;
   --spacing-2xl: 32px;
 
-  /* ── Animation tokens ─────────────────────────────────── */
   --anim-duration-fast:   150ms;
   --anim-duration-normal: 250ms;
   --anim-duration-slow:   400ms;
@@ -60,41 +56,48 @@
   --anim-item-enter:      0.25s ease-out;
 }
 
-/* ── Dark theme ─────────────────────────────────────────── */
-
-[data-theme="dark"] {
+[data-theme='dark'] {
   color-scheme: dark;
-  /* Backgrounds */
-  --bg-primary:    #1E1E1E;
-  --bg-secondary:  #2A2A2A;
-  --bg-tertiary:   #333333;
-  --bg-hover:      #3A3A3A;
-  /* Borders */
-  --border-default: #3A3A3A;
-  /* Text */
-  --text-primary:   #F5F7F8;
-  --text-secondary: #C0C4C8;
-  --text-muted:     #9CA3AF;
-  /* Primary accent — muted teal for dark */
-  --primary-default: #6FA79B;
-  --primary-hover:   #5E9389;
-  --primary-active:  #4E7F75;
-  --primary-ring:    rgba(111, 167, 155, 0.25);
-  --primary-subtle:  rgba(111, 167, 155, 0.10);
-  /* Secondary accent */
-  --color-secondary: #A0A4A8;
-  /* Highlight stays same */
-  --color-highlight: #F4CE14;
-  /* Semantic */
-  --color-danger:        #EF9A9A;
-  --color-danger-bg:     rgba(239, 154, 154, 0.12);
-  --color-danger-border: rgba(239, 154, 154, 0.30);
-  --color-warning:       #FFCC80;
-  --color-success:       #81C784;
-  --color-info:          #90CAF9;
-  /* Input focus */
-  --input-focus-border: #6FA79B;
-  --input-focus-ring:   rgba(111, 167, 155, 0.25);
+  
+  --bg-primary: #051914;
+  --bg-secondary: rgba(255, 255, 255, 0.03);
+  --bg-tertiary: rgba(255, 255, 255, 0.06);
+  --bg-hover: rgba(255, 255, 255, 0.1);
+  
+  --border-default: rgba(255, 255, 255, 0.1);
+
+  --text-primary:   #FFFFFF;
+  --text-secondary: rgba(255, 255, 255, 0.7);
+  --text-muted:     rgba(255, 255, 255, 0.5);
+
+  --primary-default:  #10B981;
+  --primary-hover:    #059669;
+  --primary-active:   #047857;
+  --primary-gradient: linear-gradient(135deg, #10B981 0%, #34D399 100%);
+  --primary-ring:     rgba(16, 185, 129, 0.3);
+  --primary-subtle:   rgba(16, 185, 129, 0.15);
+
+  --color-secondary: #9CA3AF;
+  --color-highlight: #FCD34D;
+
+  --color-danger:        #F87171;
+  --color-danger-bg:     rgba(248, 113, 113, 0.15);
+  --color-danger-border: rgba(248, 113, 113, 0.3);
+  --color-warning:       #FBBF24;
+  --color-success:       #34D399;
+  --color-info:          #60A5FA;
+
+  --input-bg:           rgba(255, 255, 255, 0.05);
+  --input-focus-border: rgba(16, 185, 129, 0.8);
+  --input-focus-ring:   rgba(16, 185, 129, 0.25);
+}
+
+[data-theme='dark'] body, [data-theme='dark'] .app-root {
+  background-color: #03120e !important;
+  background-image: 
+    radial-gradient(circle at 15% 50%, #0d2b22, transparent 50%),
+    radial-gradient(circle at 85% 30%, #081f18, transparent 40%) !important;
+  background-attachment: fixed !important;
 }
 
 
@@ -1016,3 +1019,20 @@ body.reduced-motion .dashboard-enter .app-content > * {
   }
 }
 
+
+/* ── Glassmorphism ───────────────────────────── */
+.glass {
+  background: rgba(255, 255, 255, var(--glass-opacity, 0.08)) !important;
+  backdrop-filter: blur(var(--glass-blur, 20px)) !important;
+  -webkit-backdrop-filter: blur(var(--glass-blur, 20px)) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  transition: background 0.2s ease, backdrop-filter 0.2s ease;
+  border-radius: 12px;
+}
+
+[data-theme="light"] .glass {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background: var(--bg-secondary) !important;
+  border: 1px solid var(--border-default) !important;
+}

@@ -58,7 +58,7 @@ const ReportSection: React.FC<ReportSectionProps> = ({
   }, []);
 
   return (
-    <div className={styles.card}>
+    <div className={`${styles.card} glass`}>
       {/* Header */}
       <div className={styles.header}>
         <div className={styles.iconWrapper}>

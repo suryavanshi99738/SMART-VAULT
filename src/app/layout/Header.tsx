@@ -89,7 +89,7 @@ const Header: React.FC<HeaderProps> = ({
 						</button>
 
 						{showVaultDropdown && vaults && vaults.length > 0 && (
-							<div className="header-vault-dropdown">
+							<div className="header-vault-dropdown glass">
 								{vaults.map((v) => (
 									<button
 										key={v.id}

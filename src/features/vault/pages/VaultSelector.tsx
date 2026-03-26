@@ -241,7 +241,7 @@ const VaultSelector: React.FC<VaultSelectorProps> = ({ onVaultSelected }) => {
   if (loading) {
     return (
       <div className={styles.page}>
-        <div className={styles.card}>
+        <div className={`${styles.card} glass`}>
           <p className={styles.loadingText}>Loading vaults...</p>
         </div>
       </div>
@@ -250,7 +250,7 @@ const VaultSelector: React.FC<VaultSelectorProps> = ({ onVaultSelected }) => {
 
   return (
     <div className={styles.page}>
-      <div className={styles.card}>
+      <div className={`${styles.card} glass`}>
         {/* Brand */}
         <div className={styles.brand}>
           <div className={styles.brandIcon}>
