@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useVault } from "../hooks/useVault";
 import type { VaultEntry, VaultEntryPayload } from "../types/vault.types";
 import SearchBar from "../components/SearchBar";
@@ -109,7 +110,7 @@ const VaultDashboard: React.FC = () => {
       )}
 
       {/* Delete confirmation dialog */}
-      {deleteTarget && (
+      {deleteTarget && createPortal(
         <div className={styles.confirmBackdrop} onClick={cancelDelete}>
           <div
             className={styles.confirmDialog}
@@ -141,7 +142,8 @@ const VaultDashboard: React.FC = () => {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

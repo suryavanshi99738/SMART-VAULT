@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import type { VaultEntry, VaultEntryPayload } from "../types/vault.types";
 import PasswordGenerator from "./PasswordGenerator";
 import styles from "./AddEditModal.module.css";
@@ -101,7 +102,7 @@ const AddEditModal: React.FC<AddEditModalProps> = ({
     return () => window.removeEventListener("keydown", handler);
   }, [onClose]);
 
-  return (
+  return createPortal(
     <div className={styles.backdrop} onClick={onClose}>
       <div
         className={styles.modal}
@@ -263,7 +264,8 @@ const AddEditModal: React.FC<AddEditModalProps> = ({
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

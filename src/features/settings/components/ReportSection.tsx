@@ -1,4 +1,4 @@
-// src/features/settings/components/ReportSection.tsx
+ // src/features/settings/components/ReportSection.tsx
 import React, { useCallback, useState } from "react";
 import { scheduleClipboardClear } from "../../clipboard/clipboardService";
 import styles from "./ReportSection.module.css";
@@ -37,22 +37,23 @@ const ReportSection: React.FC<ReportSectionProps> = ({
     }
   }, [clipboardClearSeconds]);
 
-  // ── Open mail app via mailto ───────────────────────────────────────────────
-  const handleMailto = useCallback(async () => {
+  // ── Open Gmail web compose ─────────────────────────────────────────────────
+  const handleOpenGmail = useCallback(async () => {
     const os = detectOS();
     const subject = encodeURIComponent("Smart Vault Feedback");
     const body = encodeURIComponent(
       `Smart Vault Version: ${APP_VERSION}\nOS: ${os}\n\nDescribe your issue or suggestion:\n\n`
     );
-    const mailtoUrl = `mailto:${DEVELOPER_EMAIL}?subject=${subject}&body=${body}`;
+    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${DEVELOPER_EMAIL}&su=${subject}&body=${body}`;
 
     try {
       // Use Tauri opener plugin (already registered in lib.rs)
       const { openUrl } = await import("@tauri-apps/plugin-opener");
-      await openUrl(mailtoUrl);
-    } catch {
+      await openUrl(gmailUrl);
+    } catch (error) {
+      console.error("Failed to open Gmail via openUrl:", error);
       // Fallback for web / dev mode
-      window.open(mailtoUrl, "_blank");
+      window.location.href = gmailUrl;
     }
   }, []);
 
@@ -153,8 +154,8 @@ const ReportSection: React.FC<ReportSectionProps> = ({
         <button
           type="button"
           className={`${styles.actionBtn} ${styles.actionBtnPrimary}`}
-          onClick={handleMailto}
-          aria-label="Open email application"
+          onClick={handleOpenGmail}
+          aria-label="Open support in Gmail"
         >
           <svg
             width="15"
@@ -166,10 +167,10 @@ const ReportSection: React.FC<ReportSectionProps> = ({
             strokeLinecap="round"
             strokeLinejoin="round"
           >
-            <line x1="22" y1="2" x2="11" y2="13" />
-            <polygon points="22 2 15 22 11 13 2 9 22 2" />
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+            <polyline points="22,6 12,13 2,6" />
           </svg>
-          Open Mail App
+          Contact Support
         </button>
       </div>
 
